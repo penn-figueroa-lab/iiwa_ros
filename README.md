@@ -200,7 +200,7 @@ Citing iiwa_ros
 [ros]: http://www.ros.org
 [gazebo]: http://gazebosim.org/
 [ros control]: http://wiki.ros.org/ros_control
-[kuka fri]: https://github.com/costashatz/kuka_fri
+[kuka fri]: https://github.com/penn-figueroa-lab/kuka_fri
 [spacevecalg]: https://github.com/jrl-umi3218/SpaceVecAlg
 [rbdyn]: https://github.com/jrl-umi3218/RBDyn
 [mc_rbdyn_urdf]: https://github.com/jrl-umi3218/mc_rbdyn_urdf
