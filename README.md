@@ -2,6 +2,8 @@ iiwa_ros
 ========
 
 Fork with updates for Figueroa Robotics Lab @ Penn.
+
+WIP: Integrating with ros-pybullet to access both Gazebo and Pybullet simulation environments and real-robot control with same codebase.
  
 ROS Stack for KUKA's IIWA robots
 ---------------------------------------
