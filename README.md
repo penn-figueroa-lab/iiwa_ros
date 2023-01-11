@@ -1,5 +1,7 @@
 iiwa_ros
 ========
+
+Fork with updates for Figueroa Robotics Lab @ Penn.
  
 ROS Stack for KUKA's IIWA robots
 ---------------------------------------
