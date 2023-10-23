@@ -34,9 +34,21 @@
     <arg name="world_name" default="$(find iiwa_gazebo)/world/iiwa.world"/> 
     <arg name="gzclient" default="false"/>
 
+
     <!-- Select the robot -->
     <arg name="robot_name" default="iiwa"/>
     <arg name="model" default="14" />
+
+    <arg name="initial_joint_positions"
+        doc="Initial joint configuration of the kuka. Specify as a list of name/value pairs in form of '-J [name-of-joint] [value-in-rad]'. Default is a 90 degree bend in the elbow"
+        default="-J $(arg robot_name)_joint_1 0
+                    -J $(arg robot_name)_joint_2 1.30899694
+                    -J $(arg robot_name)_joint_3 0
+                    -J $(arg robot_name)_joint_4 -1.3962634
+                    -J $(arg robot_name)_joint_5 0
+                    -J $(arg robot_name)_joint_6 -1.35191731
+                    -J $(arg robot_name)_joint_7 0"
+    />
 
     <!-- Select the controller -->
     <arg name="controller" default="TorqueController"/>
@@ -61,7 +73,7 @@
 
     <!-- Run a python script to send a service call to gazebo_ros to spawn a URDF robot -->
     <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-        args="-urdf -model iiwa -param robot_description"/>
+        args="-urdf -model iiwa -param robot_description $(arg initial_joint_positions)"/>
 
     <!-- Spawn controller -->
     <rosparam file="$(find iiwa_gazebo)/config/iiwa_control.yaml" command="load" ns="$(arg robot_name)"/> 
