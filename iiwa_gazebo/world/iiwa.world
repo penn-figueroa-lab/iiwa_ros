@@ -5,9 +5,9 @@
   
   <world name="default">
     <physics type="ode">
-      <max_step_size>0.005</max_step_size>
+      <max_step_size>0.003</max_step_size>
       <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
+      <real_time_update_rate>333</real_time_update_rate>
       <ode>
         <solver>
           <type>quick</type>
@@ -23,10 +23,7 @@
       </ode>
     </physics>
 
-    <include>
-      <uri>model://ground_plane</uri>
-    </include>
-    
+
     <!-- Global light source -->
     <include>
       <uri>model://sun</uri>
