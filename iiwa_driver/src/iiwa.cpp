@@ -135,8 +135,12 @@ namespace iiwa_ros {
                 }
 
                 getJointLimits(urdf_joint, limits);
-                if (getSoftJointLimits(urdf_joint, soft_limits))
+                if (getSoftJointLimits(urdf_joint, soft_limits)){
                     has_soft_limits = true;
+                    // std::cout << "soft_limits: " << soft_limits.k_position << std::endl;
+                    // std::cout << "soft_limits: " << soft_limits.k_velocity << std::endl;
+                    // std::cout << "soft_limits: " << soft_limits.min_position << ", " << soft_limits.max_position << std::endl;
+                }
             }
 
             // Create position joint interface
@@ -157,10 +161,12 @@ namespace iiwa_ros {
             hardware_interface::JointHandle joint_effort_handle(joint_state_handle, &_joint_effort_command[i]);
 
             if (has_soft_limits) {
+                // std::cout<< "THERE ARE soft EFFORTS LIMITS" << std::endl;
                 joint_limits_interface::EffortJointSoftLimitsHandle joint_limits_handle(joint_effort_handle, limits, soft_limits);
                 _effort_joint_limits_interface.registerHandle(joint_limits_handle);
             }
             else if (has_limits) {
+                // std::cout<< "THERE ARE EFFORTS LIMITS" << std::endl;
                 joint_limits_interface::EffortJointSaturationHandle joint_limits_handle(joint_effort_handle, limits);
                 _effort_joint_saturation_interface.registerHandle(joint_limits_handle);
             }
@@ -293,12 +299,27 @@ namespace iiwa_ros {
             return;
 
         // enforce limits
+            
+        // std::cout << "joint lim" << std::endl;
+        // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
         _position_joint_limits_interface.enforceLimits(elapsed_time);
+        // std::cout << "joint sat" << std::endl;
+        // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
         _position_joint_saturation_interface.enforceLimits(elapsed_time);
+        // std::cout << "eff lim" << std::endl;
+        // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
         _effort_joint_limits_interface.enforceLimits(elapsed_time);
+        // std::cout << "eff sat" << std::endl;
+        // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
         _effort_joint_saturation_interface.enforceLimits(elapsed_time);
+        // std::cout << "vel lim" << std::endl;
+        // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
         _velocity_joint_limits_interface.enforceLimits(elapsed_time);
+        // std::cout << "vel sat" << std::endl;
+        // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
         _velocity_joint_saturation_interface.enforceLimits(elapsed_time);
+        // std::cout << "FINAL" << std::endl;
+        // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
 
         // reset commmand message
         _fri_message_data->resetCommandMessage();
