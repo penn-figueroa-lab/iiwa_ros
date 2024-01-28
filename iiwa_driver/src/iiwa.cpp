@@ -299,7 +299,13 @@ namespace iiwa_ros {
             return;
 
         // enforce limits
-            
+        double j1 = _joint_effort_command[0];
+        double j2 = _joint_effort_command[1];
+        double j3 = _joint_effort_command[2];
+        double j4 = _joint_effort_command[3];
+        double j5 = _joint_effort_command[4];
+        double j6 = _joint_effort_command[5];
+        double j7 = _joint_effort_command[6];
         // std::cout << "joint lim" << std::endl;
         // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
         _position_joint_limits_interface.enforceLimits(elapsed_time);
@@ -320,6 +326,14 @@ namespace iiwa_ros {
         _velocity_joint_saturation_interface.enforceLimits(elapsed_time);
         // std::cout << "FINAL" << std::endl;
         // std::cout << _joint_effort_command[0] << ", " << _joint_effort_command[1] << ", " << _joint_effort_command[2] << ", " << _joint_effort_command[3] << ", " << _joint_effort_command[4] << ", " << _joint_effort_command[5] << ", " << _joint_effort_command[6] << std::endl;
+        if (_joint_effort_command[0] != j1) std::cout << "j1 LIM !!!!" << std::endl;
+        if (_joint_effort_command[1] != j2) std::cout << "j2 LIM !!!!" << std::endl;
+        if (_joint_effort_command[2] != j3) std::cout << "j3 LIM !!!!" << std::endl;
+        if (_joint_effort_command[3] != j4) std::cout << "j4 LIM !!!!" << std::endl;
+        if (_joint_effort_command[4] != j5) std::cout << "j5 LIM !!!!" << std::endl;
+        if (_joint_effort_command[5] != j6) std::cout << "j6 LIM !!!!" << std::endl;
+        if (_joint_effort_command[6] != j7) std::cout << "j7 LIM !!!!" << std::endl;
+        
 
         // reset commmand message
         _fri_message_data->resetCommandMessage();
