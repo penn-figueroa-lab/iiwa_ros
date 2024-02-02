@@ -402,10 +402,11 @@
     </link>
 
 
-<joint name="iiwa_joint_pot" type="fixed">
+    <joint name="iiwa_joint_pot" type="fixed">
       <parent link="iiwa_link_ee"/>
       <child link="iiwa_link_pot"/>
-      <origin rpy="0 0 0" xyz="0.04 0 0.20"/>
+      <!-- <origin rpy="0 0 0" xyz="0.015 -0.02 0.16"/> HIGHLY TUNED-->
+      <origin rpy="0 0 0" xyz="-0.01 -0.01 0.16"/>
       <!-- <origin rpy="0 1.570796 0" xyz="0.095 0 0.15"/> -->
     </joint>
     <link name="iiwa_link_pot">
