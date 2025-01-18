@@ -363,22 +363,6 @@ namespace iiwa_tools {
         return std::make_pair(jac.jacobian(rbdyn_urdf.mb, rbdyn_urdf.mbc), jac.jacobianDot(rbdyn_urdf.mb, rbdyn_urdf.mbc));
     }
 
-    Eigen::MatrixXd IiwaTools::inertia(const RobotState& robot_state)
-    {
-        mc_rbdyn_urdf::URDFParserResult rbdyn_urdf = _rbdyn_urdf;
-        rbdyn_urdf.mbc.zero(rbdyn_urdf.mb);
-
-        _update_urdf_state(rbdyn_urdf, robot_state);
-
-        rbd::ForwardDynamics fd(rbdyn_urdf.mb);
-
-        rbd::forwardKinematics(rbdyn_urdf.mb, rbdyn_urdf.mbc);
-        rbd::forwardVelocity(rbdyn_urdf.mb, rbdyn_urdf.mbc);
-        fd.computeH(rbdyn_urdf.mb, rbdyn_urdf.mbc);
-
-        return fd.H();
-    }
-
 
     void IiwaTools::init_rbdyn(const std::string& urdf_string, const std::string& end_effector)
     {
