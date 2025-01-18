@@ -31,11 +31,16 @@ Dependencies
 -------------
 
 ### KUKA FRI (Private)
+This repo can be omitted if the robot is only used in simulation.
 
 ```sh
 cd /source/directory
 git clone https://github.com/epfl-lasa/kuka_fri.git
 cd kuka_fri
+# Apply SIMD patch:
+wget https://gist.githubusercontent.com/matthias-mayr/0f947982474c1865aab825bd084e7a92/raw/244f1193bd30051ae625c8f29ed241855a59ee38/0001-Config-Disables-SIMD-march-native-by-default.patch
+git am 0001-Config-Disables-SIMD-march-native-by-default.patch
+# Build
 ./waf configure
 ./waf
 sudo ./waf install
@@ -48,16 +53,18 @@ cd /source/directory
 git clone --recursive https://github.com/jrl-umi3218/SpaceVecAlg.git
 cd SpaceVecAlg
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=native -faligned-new" -DPYTHON_BINDING=OFF ..
+cmake -DCMAKE_BUILD_TYPE=Release -DPYTHON_BINDING=OFF ..
 make -j
 sudo make install
 ```
 
-Instead of passing `-DCMAKE_CXX_FLAGS="-march=native -faligned-new"` for `SpaceVecAlg`, `RBDyn` and `mc_rbdyn_urdf` builds you can also set the `CXXFLAGS` environment variables and omit the option:
+To compile with SIMD flags (e.g. because you enabled it for robot_controllers and iiwa_ros), you can do `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=native -faligned-new" -DPYTHON_BINDING=OFF ..` instead of the above. Also, instead of passing `-DCMAKE_CXX_FLAGS="-march=native -faligned-new"` for `SpaceVecAlg`, `RBDyn` and `mc_rbdyn_urdf` builds you can also set the `CXXFLAGS` environment variables and omit the option:
 
 ```sh
 export CXXFLAGS="-march=native -faligned-new"
 ```
+
+The same holds for RBDyn and mc_rbdyn_urdf.
 
 ### RBDyn
 
@@ -66,7 +73,7 @@ cd /source/directory
 git clone --recursive https://github.com/jrl-umi3218/RBDyn.git
 cd RBDyn
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=native -faligned-new" -DPYTHON_BINDING=OFF ..
+cmake -DCMAKE_BUILD_TYPE=Release -DPYTHON_BINDING=OFF ..
 make -j
 sudo make install
 ```
@@ -78,7 +85,7 @@ cd /source/directory
 git clone --recursive https://github.com/jrl-umi3218/mc_rbdyn_urdf.git
 cd mc_rbdyn_urdf
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=native -faligned-new" -DPYTHON_BINDING=OFF ..
+cmake -DCMAKE_BUILD_TYPE=Release -DPYTHON_BINDING=OFF ..
 make -j
 sudo make install
 ```
@@ -112,7 +119,12 @@ sudo make install
 
 Compilation
 ------------
+If a simulation-only setup is enough or you do not have access to `KUKA FRI`, the robot driver compilation can be disabled with
+```sh
+touch /path/to/ros_workspace/iiwa_ros/iiwa_driver/CATKIN_IGNORE
+```
 
+Build the workspace:
 ```sh
 cd /path/to/ros_workspace
 # source ros workspace
@@ -165,11 +177,6 @@ Both of the above commands will launch IIWA in **torque-control mode**. To chang
 
 If everything looks in simulation or with the FRI driver, a next step might be to try out your robot with [MoveIt](/iiwa_moveit).
 
-Documentation
----------------------
-
-**UNDER CONSTRUCTION**
-
 Contributing
 ---------------------
 
@@ -183,18 +190,20 @@ Authors/Maintainers
 ---------------------
 
 - Konstantinos Chatzilygeroudis (costashatz@gmail.com)
+- Matthias Mayr (matthias.mayr@cs.lth.se)
 - Bernardo Fichera (bernardo.fichera@epfl.ch)
 
 ### Other Contributors
 
 - Yoan Mollard (yoan@aubrune.eu)
+- Walid Amanhoud (walid.amanhoud@epfl.ch)
 
 Citing iiwa_ros
 ------------------
 
 ```bibtex
 @software{iiwa2019github,
-  author = {Chatzilygeroudis, Konstantinos and Fichera, Bernardo and Billard, Aude},
+  author = {Chatzilygeroudis, Konstantinos and Mayr, Matthias and Fichera, Bernardo and Billard, Aude},
   title = {iiwa_ros: A ROS Stack for KUKA's IIWA robots using the Fast Research Interface},
   url = {http://github.com/epfl-lasa/iiwa_ros},
   year = {2019},

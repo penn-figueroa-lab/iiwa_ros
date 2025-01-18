@@ -1,13 +1,14 @@
 //|
-//|    Copyright (C) 2019 Learning Algorithms and Systems Laboratory, EPFL, Switzerland
+//|    Copyright (C) 2019-2022 Learning Algorithms and Systems Laboratory, EPFL, Switzerland
 //|    Authors:  Konstantinos Chatzilygeroudis (maintainer)
+//|              Matthias Mayr
 //|              Bernardo Fichera
-//|              Walid Amanhoud
 //|    email:    costashatz@gmail.com
+//|              matthias.mayr@cs.lth.se
 //|              bernardo.fichera@epfl.ch
-//|              walid.amanhoud@epfl.ch
 //|    Other contributors:
 //|              Yoan Mollard (yoan@aubrune.eu)
+//|              Walid Amanhoud (walid.amanhoud@epfl.ch)
 //|    website:  lasa.epfl.ch
 //|
 //|    This file is part of iiwa_ros.
@@ -60,7 +61,7 @@ namespace iiwa_tools {
         Eigen::MatrixXd jacobian_deriv(const RobotState& robot_state);
         std::pair<Eigen::MatrixXd, Eigen::MatrixXd> jacobians(const RobotState& robot_state);
         Eigen::VectorXd gravity(const std::vector<double>& gravity, const RobotState& robot_state);
-        Eigen::MatrixXd inertia(const RobotState& robot_state);
+	    Eigen::MatrixXd mass_matrix(const RobotState& robot_state);
 
     protected:
         size_t _rbd_index(const std::string& body_name) const;
