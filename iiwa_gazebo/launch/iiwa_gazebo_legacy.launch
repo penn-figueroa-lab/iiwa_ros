@@ -41,13 +41,13 @@
 
     <arg name="initial_joint_positions"
         doc="Initial joint configuration of the kuka. Specify as a list of name/value pairs in form of '-J [name-of-joint] [value-in-rad]'. Default is a 90 degree bend in the elbow"
-        default="-J $(arg robot_name)_joint_1 0.3751203947139423
-                    -J $(arg robot_name)_joint_2 0.3380146607841752
-                    -J $(arg robot_name)_joint_3 0.009613307794674064
-                    -J $(arg robot_name)_joint_4 -1.07553146500437
-                    -J $(arg robot_name)_joint_5 -0.0017447936722332358
-                    -J $(arg robot_name)_joint_6 1.7274647084632058
-                    -J $(arg robot_name)_joint_7 0.3839209014844718"
+        default="-J $(arg robot_name)_joint_1 0
+                    -J $(arg robot_name)_joint_2 1.30899694
+                    -J $(arg robot_name)_joint_3 0
+                    -J $(arg robot_name)_joint_4 -1.3962634
+                    -J $(arg robot_name)_joint_5 0
+                    -J $(arg robot_name)_joint_6 -1.35191731
+                    -J $(arg robot_name)_joint_7 0"
     />
 
     <!-- Select the controller -->
@@ -75,13 +75,7 @@
     <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
         args="-urdf -model iiwa -param robot_description $(arg initial_joint_positions)"/>
 
-    <!-- Load the table URDF -->
-    <param name="table_description"
-           command="$(find xacro)/xacro --inorder '$(find iiwa_description)/urdf/table.urdf'" />
 
-    <!-- Spawn the table -->
-    <node name="table_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-      args="-urdf -param table_description -model table" />
 
 
     <!-- Spawn controller -->

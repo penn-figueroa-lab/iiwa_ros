@@ -92,9 +92,21 @@
       <material>Gazebo/Grey</material>
       <mu1>0.2</mu1>
       <mu2>0.2</mu2>
+      
     </gazebo>
-
+      <gazebo reference="${robot_name}_joint_7">
+        <provideFeedback>true</provideFeedback>
+      </gazebo>
+      <gazebo>
+        <plugin name="ft_sensor_plugin" filename="libgazebo_ros_ft_sensor.so">
+          <updateRate>500.0</updateRate>
+          <topicName>${robot_name}/ft_sensor</topicName>
+          <jointName>${robot_name}_joint_7</jointName>
+        </plugin>
+      </gazebo>
   </xacro:macro>
+
+
 
 </robot>
 
