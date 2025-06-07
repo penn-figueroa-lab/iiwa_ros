@@ -61,7 +61,8 @@ namespace iiwa_tools {
         std::pair<Eigen::MatrixXd, Eigen::MatrixXd> jacobians(const RobotState& robot_state);
         Eigen::VectorXd gravity(const std::vector<double>& gravity, const RobotState& robot_state);
         Eigen::MatrixXd inertia(const RobotState& robot_state);
-
+        Eigen::MatrixXd mass_matrix_crba(const RobotState& robot_state);
+        Eigen::MatrixXd task_space_mass_matrix(const RobotState& robot_state);
     protected:
         size_t _rbd_index(const std::string& body_name) const;
         void _update_urdf_state(mc_rbdyn_urdf::URDFParserResult& rbdyn_urdf, const RobotState& robot_state);

@@ -26,7 +26,7 @@
   <joint name="fixed_to_world" type="fixed">
     <parent link="world"/>
     <child link="table_link"/>
-    <origin xyz="0.9 0 0.3"/> <!-- Table position -->
+    <origin xyz="0.7 0 0.2"/> <!-- Table position -->
   </joint>
 </robot>
 

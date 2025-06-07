@@ -403,5 +403,91 @@ namespace iiwa_tools {
                 rbdyn_urdf.mbc.jointTorque[rbd_index][0] = robot_state.torque[i];
         }
     }
+    Eigen::MatrixXd IiwaTools::mass_matrix_crba(const RobotState& robot_state)
+    {
+        mc_rbdyn_urdf::URDFParserResult rbdyn_urdf = _rbdyn_urdf;
+        rbdyn_urdf.mbc.zero(rbdyn_urdf.mb);
+        _update_urdf_state(rbdyn_urdf, robot_state);
+
+        rbd::forwardKinematics(rbdyn_urdf.mb, rbdyn_urdf.mbc);
+        rbd::forwardVelocity(rbdyn_urdf.mb, rbdyn_urdf.mbc);
+
+        const int dof = rbdyn_urdf.mb.nrDof();
+        Eigen::MatrixXd M = Eigen::MatrixXd::Zero(dof, dof);
+
+        std::vector<sva::RBInertiad> Ic(rbdyn_urdf.mb.nrBodies());
+        for(int i = 0; i < rbdyn_urdf.mb.nrBodies(); ++i)
+        {
+            Ic[i] = rbdyn_urdf.mb.body(i).inertia();
+        }
+
+        for(int i = rbdyn_urdf.mb.nrBodies() - 1; i >= 0; --i)
+        {
+            int parent = rbdyn_urdf.mb.predecessor(i);
+            if(parent != -1)
+            {
+                const auto & X_p_i = rbdyn_urdf.mbc.parentToSon[i];
+                Ic[parent] += X_p_i.dualMul(Ic[i]);
+            }
+        }
+
+        int idx_i = 0;
+        for(int i = 0; i < rbdyn_urdf.mb.nrJoints(); ++i)
+        {
+            const auto & S_i = rbdyn_urdf.mbc.motionSubspace[i];
+            const auto & I_ci = Ic[rbdyn_urdf.mb.successor(i)];
+            int dof_i = rbdyn_urdf.mb.joint(i).dof();
+
+            int idx_j = 0;
+            for(int j = 0; j <= i; ++j)
+            {
+                const auto & S_j = rbdyn_urdf.mbc.motionSubspace[j];
+                int dof_j = rbdyn_urdf.mb.joint(j).dof();
+
+                Eigen::MatrixXd M_ij = S_i.transpose() * I_ci.matrix() * S_j;
+                M.block(idx_i, idx_j, dof_i, dof_j) = M_ij;
+                if(i != j)
+                    M.block(idx_j, idx_i, dof_j, dof_i) = M_ij.transpose();
+
+                idx_j += dof_j;
+            }
+
+            idx_i += dof_i;
+        }
+
+        return M;
+    }
+    Eigen::MatrixXd IiwaTools::task_space_mass_matrix(const RobotState& robot_state)
+    {
+        mc_rbdyn_urdf::URDFParserResult rbdyn_urdf = _rbdyn_urdf;
+        rbdyn_urdf.mbc.zero(rbdyn_urdf.mb);
+        _update_urdf_state(rbdyn_urdf, robot_state);
+
+        rbd::forwardKinematics(rbdyn_urdf.mb, rbdyn_urdf.mbc);
+        rbd::forwardVelocity(rbdyn_urdf.mb, rbdyn_urdf.mbc);
+
+        // 1. Get Jacobian at end-effector
+        rbd::Jacobian jac(rbdyn_urdf.mb, rbdyn_urdf.mb.body(_ef_index).name());
+        Eigen::MatrixXd J = jac.jacobian(rbdyn_urdf.mb, rbdyn_urdf.mbc); // 6xN
+        
+        // For step two, you pick between using M or H, same thing different way to calc
+
+        // 2. Get Mass Matrix M
+        // Eigen::MatrixXd H = mass_matrix_crba(robot_state); // NxN
+
+        // 2. Use RBDyn ForwardDynamics to get H
+        rbd::ForwardDynamics fd(rbdyn_urdf.mb);
+        fd.computeH(rbdyn_urdf.mb, rbdyn_urdf.mbc);
+        Eigen::MatrixXd H = fd.H(); // NxN
+
+        // 3. Lambda = (J H⁻¹ Jᵀ)⁻¹ with regularization
+        Eigen::MatrixXd JHinvJt = J * H.ldlt().solve(J.transpose());
+        JHinvJt += 1e-2 * Eigen::MatrixXd::Identity(JHinvJt.rows(), JHinvJt.cols()); // Regularization
+
+        // 4. Safe inversion
+        Eigen::MatrixXd Lambda = JHinvJt.ldlt().solve(Eigen::MatrixXd::Identity(6, 6));
+
+        return Lambda;
+    }
 
 } // namespace iiwa_tools
