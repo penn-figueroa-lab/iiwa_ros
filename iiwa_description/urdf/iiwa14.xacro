@@ -38,7 +38,7 @@
 
   <!-- some constants -->
   <xacro:property name="safety_controller_k_pos" value="100"/>
-  <xacro:property name="safety_controller_k_vel" value="10"/>
+  <xacro:property name="safety_controller_k_vel" value="60"/>
   <xacro:property name="safety_percentage" value="0.95"/>
   <xacro:property name="joint_damping" value="0.5"/>
   <!-- joint limits -->
@@ -208,10 +208,12 @@
     <link name="${robot_name}_link_3">
       <inertial>
       <origin rpy="0 0 0" xyz="0 0.03 0.13"/>
-      <mass value="3.5"/>
-      <!--3.18 kuka CAD value-->
-      <!--3 Original Drake URDF value-->
-      <inertia ixx="0.025" ixy="0" ixz="0" iyy="0.0238" iyz="0" izz="0.0076"/>
+      <!-- iiwa7 -->
+      <mass value="4.05623"/>
+      <inertia ixx="0.03204"  ixy="0"  ixz="0" iyy="0.00972" iyz="0.006227" izz="0.03042" />
+      <!-- DRAKE -->
+      <!-- <mass value="3.5"/> -->
+      <!-- <inertia ixx="0.025" ixy="0" ixz="0" iyy="0.0238" iyz="0" izz="0.0076"/> -->
     </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -291,9 +293,8 @@
     <link name="${robot_name}_link_5">
       <inertial>
       <origin rpy="0 0 0" xyz="0.0001 0.021 0.076"/>
+      <!--  iiwa7 -->
       <mass value="3.5"/>
-      <!--1.69 kuka CAD value-->
-      <!--1.7 Original Drake URDF value-->
       <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.0087" iyz="0" izz="0.00449"/>
       </inertial>
 
@@ -333,10 +334,12 @@
     <link name="${robot_name}_link_6">
       <inertial>
       <origin rpy="0 0 0" xyz="0 0.0006 0.0004"/>
-      <mass value="1.8"/>
-      <!--1.8 kuka CAD value-->
-      <!--1.8 Original Drake URDF value-->
-      <inertia ixx="0.0049" ixy="0" ixz="0" iyy="0.0047" iyz="0" izz="0.0036"/>
+      <!--  iiwa7 -->
+      <mass value="2.3466"/>
+      <inertia ixx="0.006509"  ixy="0"  ixz="0" iyy="0.006259" iyz="0.00031891" izz="0.004527" />
+      <!-- DRAKE -->
+      <!-- <mass value="1.8"/> -->
+      <!-- <inertia ixx="0.0049" ixy="0" ixz="0" iyy="0.0047" iyz="0" izz="0.0036"/> -->
     </inertial>
 
       <visual>
@@ -375,10 +378,12 @@
     <link name="${robot_name}_link_7">
       <inertial>
       <origin rpy="0 0 0" xyz="0 0 0.02"/>
-      <mass value="1.2"/>
-      <!--0.31 kuka CAD value-->
-      <!--0.3 Original Drake URDF value-->
-      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+      <!-- iiwa7 -->
+      <mass value="3.129"/>
+      <inertia ixx="0.01464"  ixy="0.0005912"  ixz="0" iyy="0.01465" iyz="0" izz="0.002872" />
+      <!-- DRAKE -->
+      <!-- <mass value="1.2"/> -->
+      <!-- <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/> -->
     </inertial>
 
       <visual>
@@ -402,20 +407,36 @@
       <parent link="${robot_name}_link_7"/>
       <child link="${robot_name}_link_ee"/>
       <origin xyz="0 0 0.045" rpy="0 0 0"/>
-      <!-- <origin xyz="0 0 0.25" rpy="0 0 0"/> -->
     </joint>
 
     <link name="${robot_name}_link_ee">
       <inertial>
-        <!-- <origin xyz="0 0 0" rpy="0 0 0"/> -->
-        <origin xyz="0 0 0.155" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <!-- <origin xyz="0 0 0.155" rpy="0 0 0"/> -->
         <mass value="1e-6"/>
-        <!-- <mass value="1.5"/> -->
         <inertia ixx="1"  ixy="0"  ixz="0" iyy="1" iyz="0" izz="1" />
       </inertial>
     </link>
 
-    
+    <joint name="${robot_name}_joint_gripper" type="fixed">
+      <parent link="${robot_name}_link_ee"/>
+      <child link="${robot_name}_link_gripper"/>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <!-- <limit effort="100" velocity="100"/> -->
+    </joint>
+
+    <link name="${robot_name}_link_gripper">
+      <inertial>
+        <!-- COM: put it along +z from the mounting plane.
+            Start with 6–8 cm; tune if gravity torque is off. -->
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+        <!-- 2F-85 (~0.9–1.0 kg) + soft fingers (~0.1–0.3 kg) -->
+        <mass value="1.15"/>
+        <!-- Box inertia about COM using dims ~0.163 x 0.149 x 0.061 m -->
+        <inertia ixx="0.00248" ixy="0" ixz="0" iyy="0.00290" iyz="0" izz="0.00467" />
+      </inertial>
+    </link>
 
     <!--Extensions -->
     <xacro:iiwa_gazebo robot_name="${robot_name}" />
