@@ -613,6 +613,17 @@ namespace iiwa_control {
             enforceJointLimits(commanded_effort[i], i);
             joints_[i].setCommand(commanded_effort[i]);
         }
+
+        // Print update rate and dt once per second
+        static std::size_t s_update_count = 0;
+        static ros::Time s_update_t0;
+        s_update_count++;
+        if (s_update_t0.isZero()) {
+            s_update_t0 = time;
+        }
+        const double elapsed = (time - s_update_t0).toSec();
+        const double rate = (elapsed > 0.0) ? static_cast<double>(s_update_count) / elapsed : 0.0;
+        ROS_INFO_STREAM_THROTTLE(1.0, "update_rate=" << rate << " Hz, dt=" << period.toSec() << " s");
     }
 
     void CustomEffortController::commandCB(const std_msgs::Float64MultiArrayConstPtr& msg)

@@ -38,9 +38,9 @@
 
   <!-- some constants -->
   <xacro:property name="safety_controller_k_pos" value="100"/>
-  <xacro:property name="safety_controller_k_vel" value="60"/>
+  <xacro:property name="safety_controller_k_vel" value="2"/>
   <xacro:property name="safety_percentage" value="0.95"/>
-  <xacro:property name="joint_damping" value="0.5"/>
+  <!-- <xacro:property name="joint_damping" value="0.5"/> -->
   <!-- joint limits -->
   <xacro:property name="joint_limit_1" value="170"/>
   <xacro:property name="joint_limit_2" value="120"/>
@@ -65,6 +65,27 @@
   <xacro:property name="max_velocity_5" value="${130 * PI / 180.}"/>
   <xacro:property name="max_velocity_6" value="${135 * PI / 180.}"/>
   <xacro:property name="max_velocity_7" value="${135 * PI / 180.}"/>
+
+  <!-- from ETHZ -->
+  <xacro:property name="damping_factor" default="1.0"/>
+  <xacro:property name="d0" value="${damping_factor*0.241499}"/>
+  <xacro:property name="d1" value="${damping_factor*0.373279}"/>
+  <xacro:property name="d2" value="${damping_factor*0.110253}"/>
+  <xacro:property name="d3" value="${damping_factor*0.100000}"/>
+  <xacro:property name="d4" value="${damping_factor*0.100000}"/>
+  <xacro:property name="d5" value="${damping_factor*0.124842}"/>
+  <xacro:property name="d6" value="${damping_factor*0.100000}"/>
+
+  <xacro:property name="friction_factor" value="0.0"/>
+  <xacro:property name="f0" value="${friction_factor*0.319088	*	1.0 }"/>
+  <xacro:property name="f1" value="${friction_factor*0.181301}"/>
+  <xacro:property name="f2" value="${friction_factor*0.073019}"/>
+  <xacro:property name="f3" value="${friction_factor*0.176713}"/>
+  <xacro:property name="f4" value="${friction_factor*0.034631	*	1.0 }"/>
+  <xacro:property name="f5" value="${friction_factor*0.133913}"/>
+  <xacro:property name="f6" value="${friction_factor*0.087096 	*	1.0 }"/>
+
+
 
   <xacro:macro name="iiwa14" params="parent hardware_interface robot_name collision_postfix *origin">
 
@@ -120,15 +141,19 @@
                                upper="${safety_percentage * joint_limit_1 * PI / 180}"
                                k_p="${safety_controller_k_pos}"
                                k_v="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d0}" friction="${f0}"/>
     </joint>
 
     <link name="${robot_name}_link_1">
       <inertial>
-      <origin rpy="0 0 0" xyz="0 -0.03 0.12"/>
-      <mass value="5.76"/>
-      <inertia ixx="0.033" ixy="0" ixz="0" iyy="0.0333" iyz="0" izz="0.0123"/>
-    </inertial>
+        <origin xyz="-0.0035 0.001602 ${-0.031387+0.2025}" rpy="0 0 0"/>
+        <mass value="3.947808"/>
+        <inertia ixx="0.004554"  ixy="0"  ixz="0" iyy="0.004542" iyz="0" izz="0.000289" />
+        <!-- <origin rpy="0 0 0" xyz="0 -0.03 0.12"/> -->
+        <!-- <mass value="5.76"/> -->
+        <!-- <inertia ixx="0.033" ixy="0" ixz="0" iyy="0.0333" iyz="0" izz="0.0123"/> -->
+      </inertial>
 
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -160,17 +185,19 @@
                                upper="${safety_percentage * joint_limit_2 * PI / 180}"
                                k_p="${safety_controller_k_pos}"
                                k_v="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d1}" friction="${f1}"/>
     </joint>
 
     <link name="${robot_name}_link_2">
       <inertial>
-      <origin rpy="0 0 0" xyz="0.0003 0.059 0.042"/>
-      <mass value="6.35"/>
-      <!-- 3.95 kuka CAD value-->
-      <!--4 Original Drake URDF value-->
-      <inertia ixx="0.0305" ixy="0" ixz="0" iyy="0.0304" iyz="0" izz="0.011"/>
-    </inertial>
+        <origin xyz="0.007671 0.166693 0.003551" rpy="0 0 0"/>
+        <mass value="4.502752"/>
+        <inertia ixx="0.000318"  ixy="0"  ixz="0" iyy="0.018" iyz="0" izz="0.000419" />
+        <!-- <origin rpy="0 0 0" xyz="0.0003 0.059 0.042"/> -->
+        <!-- <mass value="6.35"/> -->
+        <!-- <inertia ixx="0.0305" ixy="0" ixz="0" iyy="0.0304" iyz="0" izz="0.011"/> -->
+      </inertial>
 
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -202,19 +229,23 @@
                                upper="${safety_percentage * joint_limit_3 * PI / 180}"
                                k_p="${safety_controller_k_pos}"
                                k_v="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d2}" friction="${f2}"/>
     </joint>
 
     <link name="${robot_name}_link_3">
       <inertial>
-      <origin rpy="0 0 0" xyz="0 0.03 0.13"/>
-      <!-- iiwa7 -->
-      <mass value="4.05623"/>
-      <inertia ixx="0.03204"  ixy="0"  ixz="0" iyy="0.00972" iyz="0.006227" izz="0.03042" />
-      <!-- DRAKE -->
-      <!-- <mass value="3.5"/> -->
-      <!-- <inertia ixx="0.025" ixy="0" ixz="0" iyy="0.0238" iyz="0" izz="0.0076"/> -->
-    </inertial>
+        <origin xyz="-0.002246 -0.034918 ${-0.026522+0.2155}" rpy="0 0 0"/>
+        <mass value="2.455197"/>
+        <inertia ixx="0.002233"  ixy="-0.000046"  ixz="0" iyy="0.002191" iyz="0" izz="0.000725" />
+        <!-- <origin rpy="0 0 0" xyz="0 0.03 0.13"/> -->
+        <!-- iiwa7 -->
+        <!-- <mass value="4.05623"/> -->
+        <!-- <inertia ixx="0.03204"  ixy="0"  ixz="0" iyy="0.00972" iyz="0.006227" izz="0.03042" /> -->
+        <!-- DRAKE -->
+        <!-- <mass value="3.5"/> -->
+        <!-- <inertia ixx="0.025" ixy="0" ixz="0" iyy="0.0238" iyz="0" izz="0.0076"/> -->
+      </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
@@ -245,17 +276,19 @@
                                upper="${safety_percentage * joint_limit_4 * PI / 180}"
                                k_p="${safety_controller_k_pos}"
                                k_v="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d3}" friction="${f3}"/>
     </joint>
 
     <link name="${robot_name}_link_4">
       <inertial>
-      <origin rpy="0 0 0" xyz="0 0.067 0.034"/>
-      <mass value="3.5"/>
-      <!--2.74 kuka CAD value-->
-      <!--2.7 Original Drake URDF value-->
-      <inertia ixx="0.017" ixy="0" ixz="0" iyy="0.0164" iyz="0" izz="0.006"/>
-    </inertial>
+        <origin xyz="0.000196 -0.052679 0.038182" rpy="0 0 0"/>
+        <mass value="2.611550"/>
+        <inertia ixx="0.038444"  ixy="0.000880"  ixz="-0.001120" iyy="0.011437" iyz="-0.001113" izz="0.049880" /> 
+        <!-- <origin rpy="0 0 0" xyz="0 0.067 0.034"/> -->
+        <!-- <mass value="3.5"/> -->
+        <!-- <inertia ixx="0.017" ixy="0" ixz="0" iyy="0.0164" iyz="0" izz="0.006"/> -->
+      </inertial>
 
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -287,15 +320,19 @@
                                upper="${safety_percentage * joint_limit_5 * PI / 180}"
                                k_p="${safety_controller_k_pos}"
                                k_v="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d4}" friction="${f4}"/>
     </joint>
 
     <link name="${robot_name}_link_5">
       <inertial>
-      <origin rpy="0 0 0" xyz="0.0001 0.021 0.076"/>
-      <!--  iiwa7 -->
-      <mass value="3.5"/>
-      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.0087" iyz="0" izz="0.00449"/>
+        <origin xyz="0.000054 -0.002367 ${-0.211336+0.2155}" rpy="0 0 0"/>
+        <mass value="3.410009"/>
+        <inertia ixx="0.002769"  ixy="0"  ixz="0" iyy="0.002842" iyz="0" izz="0.000117" />
+        <!-- <origin rpy="0 0 0" xyz="0.0001 0.021 0.076"/> -->
+        <!--  iiwa7 -->
+        <!-- <mass value="3.5"/> -->
+        <!-- <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.0087" iyz="0" izz="0.00449"/> -->
       </inertial>
 
       <visual>
@@ -328,19 +365,23 @@
                                upper="${safety_percentage * joint_limit_6 * PI / 180}"
                                k_p="${safety_controller_k_pos}"
                                k_v="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d5}" friction="${f5}"/>
     </joint>
 
     <link name="${robot_name}_link_6">
       <inertial>
-      <origin rpy="0 0 0" xyz="0 0.0006 0.0004"/>
-      <!--  iiwa7 -->
-      <mass value="2.3466"/>
-      <inertia ixx="0.006509"  ixy="0"  ixz="0" iyy="0.006259" iyz="0.00031891" izz="0.004527" />
-      <!-- DRAKE -->
-      <!-- <mass value="1.8"/> -->
-      <!-- <inertia ixx="0.0049" ixy="0" ixz="0" iyy="0.0047" iyz="0" izz="0.0036"/> -->
-    </inertial>
+        <origin xyz="0.000492 0.020190 -0.027496" rpy="0 0 0"/>
+        <mass value="3.387949"/>
+        <inertia ixx="0.000500"  ixy="0"  ixz="0" iyy="0.002809" iyz="0" izz="0.002315" />
+        <!-- <origin rpy="0 0 0" xyz="0 0.0006 0.0004"/> -->
+        <!--  iiwa7 -->
+        <!-- <mass value="2.3466"/> -->
+        <!-- <inertia ixx="0.006509"  ixy="0"  ixz="0" iyy="0.006259" iyz="0.00031891" izz="0.004527" /> -->
+        <!-- DRAKE -->
+        <!-- <mass value="1.8"/> -->
+        <!-- <inertia ixx="0.0049" ixy="0" ixz="0" iyy="0.0047" iyz="0" izz="0.0036"/> -->
+      </inertial>
 
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -372,19 +413,23 @@
                                upper="${safety_percentage * joint_limit_7 * PI / 180}"
                                k_p="${safety_controller_k_pos}"
                                k_v="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d6}" friction="${f6}"/>
     </joint>
 
     <link name="${robot_name}_link_7">
       <inertial>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
-      <!-- iiwa7 -->
-      <mass value="3.129"/>
-      <inertia ixx="0.01464"  ixy="0.0005912"  ixz="0" iyy="0.01465" iyz="0" izz="0.002872" />
-      <!-- DRAKE -->
-      <!-- <mass value="1.2"/> -->
-      <!-- <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/> -->
-    </inertial>
+        <origin xyz="-0.03465 -0.023242 ${0.071377-0.081}" rpy="0 0 0"/>
+        <mass value="${0.354321 / 0.308 * 0.44}"/> <!--this is for the MFT Pneumatisch flange-->
+        <inertia ixx="0.007946"  ixy="0.000221"  ixz="0.000294" iyy="0.010889" iyz="-0.000294" izz="0.002944" />
+        <!-- <origin rpy="0 0 0" xyz="0 0 0.02"/> -->
+        <!-- iiwa7 -->
+        <!-- <mass value="3.129"/> -->
+        <!-- <inertia ixx="0.01464"  ixy="0.0005912"  ixz="0" iyy="0.01465" iyz="0" izz="0.002872" /> -->
+        <!-- DRAKE -->
+        <!-- <mass value="1.2"/> -->
+        <!-- <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/> -->
+      </inertial>
 
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -421,7 +466,7 @@
     <joint name="${robot_name}_joint_gripper" type="fixed">
       <parent link="${robot_name}_link_ee"/>
       <child link="${robot_name}_link_gripper"/>
-      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+      <origin xyz="0 0 0.12" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
       <!-- <limit effort="100" velocity="100"/> -->
     </joint>
@@ -445,8 +490,6 @@
   </xacro:macro>
 
 </robot>
-
-
 
     <!-- <joint name="iiwa_gripper_joint" type="fixed">
       <parent link="iiwa_link_7"/>
