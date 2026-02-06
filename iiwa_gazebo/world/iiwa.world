@@ -5,9 +5,9 @@
   
   <world name="default">
     
-    <include>
+    <!-- <include>
       <uri>model://ground_plane</uri>
-    </include>
+    </include> -->
     
     <!-- Global light source -->
     <include>
