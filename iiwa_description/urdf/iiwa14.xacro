@@ -468,18 +468,19 @@
       <child link="${robot_name}_link_gripper"/>
       <origin xyz="0 0 0.16" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
-      <!-- <limit effort="100" velocity="100"/> -->
     </joint>
 
     <link name="${robot_name}_link_gripper">
       <inertial>
         <!-- CoM expressed in ${robot_name}_link_gripper frame -->
-        <origin xyz="5.3403e-08 -2.8842e-06 -1.1813481e-01" rpy="0 0 0"/>
-        <mass value="0.365848541"/>
+        <!-- <origin xyz="0 0 -0.11813481" rpy="0 0 0"/>
+        <mass value="0.365848541"/> -->
+        <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+        <mass value="1e-6"/>
         <!-- Inertia about the CoM, expressed in link frame axes -->
-        <inertia
-          ixx="0.00129517580"  ixy="-0.00000261740673" ixz="-0.00000000008720478"
+        <inertia ixx="0.00129517580"  ixy="0" ixz="-0.00000000008720478"
           iyy="0.000340974786" iyz="-0.0000000453920893" izz="0.00108551857"/>
+          <!-- “realistic lumped” (0.9–1.2 kg, CoM ~4–6 cm forward of the flange) -->
       </inertial>
     </link>
 
