@@ -419,8 +419,8 @@
 
     <link name="${robot_name}_link_7">
       <inertial>
-        <origin xyz="-0.03465 -0.023242 ${0.071377-0.081}" rpy="0 0 0"/>
-        <mass value="${0.354321 / 0.308 * 0.44}"/> <!--this is for the MFT Pneumatisch flange-->
+        <origin xyz="-0.03465 -0.023242 ${0.071377-0.0}" rpy="0 0 0"/>
+        <mass value="0.35432"/> 
         <inertia ixx="0.007946"  ixy="0.000221"  ixz="0.000294" iyy="0.010889" iyz="-0.000294" izz="0.002944" />
         <!-- <origin rpy="0 0 0" xyz="0 0 0.02"/> -->
         <!-- iiwa7 -->
@@ -466,35 +466,27 @@
     <joint name="${robot_name}_joint_gripper" type="fixed">
       <parent link="${robot_name}_link_ee"/>
       <child link="${robot_name}_link_gripper"/>
-      <origin xyz="0 0 0.12" rpy="0 0 0"/>
+      <origin xyz="0 0 0.16" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
       <!-- <limit effort="100" velocity="100"/> -->
     </joint>
 
     <link name="${robot_name}_link_gripper">
-      <inertial>
+      <!-- <inertial> -->
         <!-- COM: put it along +z from the mounting plane.
             Start with 6–8 cm; tune if gravity torque is off. -->
-        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+        <!-- <origin xyz="0 0 0.0" rpy="0 0 0"/> -->
         <!-- 2F-85 (~0.9–1.0 kg) + soft fingers (~0.1–0.3 kg) -->
-        <mass value="1.15"/>
+        <!-- <mass value="1.15"/> -->
         <!-- Box inertia about COM using dims ~0.163 x 0.149 x 0.061 m -->
-        <inertia ixx="0.00248" ixy="0" ixz="0" iyy="0.00290" iyz="0" izz="0.00467" />
-      </inertial>
+        <!-- <inertia ixx="0.00248" ixy="0" ixz="0" iyy="0.00290" iyz="0" izz="0.00467" /> -->
+      <!-- </inertial> -->
     </link>
 
-    <!--Extensions -->
-    <xacro:iiwa_gazebo robot_name="${robot_name}" />
-    <xacro:iiwa_transmission hardware_interface="${hardware_interface}"/>
-
-  </xacro:macro>
-
-</robot>
-
-    <!-- <joint name="iiwa_gripper_joint" type="fixed">
-      <parent link="iiwa_link_7"/>
+    <joint name="iiwa_gripper_joint" type="fixed">
+      <parent link="${robot_name}_link_ee"/>
       <child link="robotiq_arg2f_base_link"/>
-      <origin rpy="0 0 0" xyz="0 0 0.045"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
     </joint>
 
     <link name="robotiq_arg2f_base_link">
@@ -769,4 +761,14 @@
       <parent link="right_inner_finger"/>
       <child link="right_inner_finger_pad"/>
       <axis xyz="0 0 1"/>
-    </joint> -->
+    </joint>
+
+    <!--Extensions -->
+    <xacro:iiwa_gazebo robot_name="${robot_name}" />
+    <xacro:iiwa_transmission hardware_interface="${hardware_interface}"/>
+
+  </xacro:macro>
+
+</robot>
+
+    
