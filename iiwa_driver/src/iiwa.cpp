@@ -143,10 +143,12 @@ namespace iiwa_ros {
             hardware_interface::JointHandle joint_position_handle(joint_state_handle, &_joint_position_command[i]);
 
             if (has_soft_limits) {
+                std::cout << "Position: has soft limits" << std::endl;
                 joint_limits_interface::PositionJointSoftLimitsHandle joint_limits_handle(joint_position_handle, limits, soft_limits);
                 _position_joint_limits_interface.registerHandle(joint_limits_handle);
             }
             else {
+                std::cout << "Position: has limits" << std::endl;
                 joint_limits_interface::PositionJointSaturationHandle joint_limits_handle(joint_position_handle, limits);
                 _position_joint_saturation_interface.registerHandle(joint_limits_handle);
             }
@@ -157,10 +159,12 @@ namespace iiwa_ros {
             hardware_interface::JointHandle joint_effort_handle(joint_state_handle, &_joint_effort_command[i]);
 
             if (has_soft_limits) {
+                std::cout << "Effort: has soft limits" << std::endl;
                 joint_limits_interface::EffortJointSoftLimitsHandle joint_limits_handle(joint_effort_handle, limits, soft_limits);
                 _effort_joint_limits_interface.registerHandle(joint_limits_handle);
             }
             else if (has_limits) {
+                std::cout << "Effort: has limits" << std::endl;
                 joint_limits_interface::EffortJointSaturationHandle joint_limits_handle(joint_effort_handle, limits);
                 _effort_joint_saturation_interface.registerHandle(joint_limits_handle);
             }
@@ -171,10 +175,12 @@ namespace iiwa_ros {
             hardware_interface::JointHandle joint_velocity_handle(joint_state_handle, &_joint_velocity_command[i]);
 
             if (has_soft_limits) {
+                std::cout << "Velocity: has soft limits" << std::endl;
                 joint_limits_interface::VelocityJointSoftLimitsHandle joint_limits_handle(joint_velocity_handle, limits, soft_limits);
                 _velocity_joint_limits_interface.registerHandle(joint_limits_handle);
             }
             else {
+                std::cout << "Velocity: has limits" << std::endl;
                 joint_limits_interface::VelocityJointSaturationHandle joint_limits_handle(joint_velocity_handle, limits);
                 _velocity_joint_saturation_interface.registerHandle(joint_limits_handle);
             }
@@ -293,12 +299,21 @@ namespace iiwa_ros {
             return;
 
         // enforce limits
+        // Check if effort limits are violated
+        std::vector<double> effort_cmd = _joint_effort_command;
+
         _position_joint_limits_interface.enforceLimits(elapsed_time);
         _position_joint_saturation_interface.enforceLimits(elapsed_time);
         _effort_joint_limits_interface.enforceLimits(elapsed_time);
         _effort_joint_saturation_interface.enforceLimits(elapsed_time);
         _velocity_joint_limits_interface.enforceLimits(elapsed_time);
         _velocity_joint_saturation_interface.enforceLimits(elapsed_time);
+
+        for (int i = 0; i < _num_joints; i++) {
+            if (_joint_effort_command[i] != effort_cmd[i]) {
+                ROS_WARN_STREAM_THROTTLE(1.0, "EFFORT_cmd for JNT '" << _joint_names[i] << "' - saturated from " << effort_cmd[i] << " to " << _joint_effort_command[i]);
+            }
+        }
 
         // reset commmand message
         _fri_message_data->resetCommandMessage();
