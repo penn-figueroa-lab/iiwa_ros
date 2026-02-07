@@ -113,15 +113,15 @@ namespace iiwa_gazebo {
         // Check if effort limits are violated
         std::vector<double> effort_cmd = joint_effort_command_;
 
-        ej_sat_interface_.enforceLimits(period);
-        ej_limits_interface_.enforceLimits(period);
+        // ej_sat_interface_.enforceLimits(period);
+        // ej_limits_interface_.enforceLimits(period);
         pj_sat_interface_.enforceLimits(period);
         pj_limits_interface_.enforceLimits(period);
         vj_sat_interface_.enforceLimits(period);
         vj_limits_interface_.enforceLimits(period);
 
         for (size_t i = 0; i < n_dof_; i++) {
-            if ((joint_effort_command_[i] - effort_cmd[i])> 1e-4) {
+            if (joint_effort_command_[i] != effort_cmd[i]) {
                 ROS_WARN_STREAM_THROTTLE(1.0, "SIM EFFORT_cmd for JNT '" << joint_names_[i] << "' - enforced from " << effort_cmd[i] << " to " << joint_effort_command_[i]);
             }
         }
@@ -132,12 +132,6 @@ namespace iiwa_gazebo {
                 const double effort_limit = joint_effort_limits_[j];
                 const double effort = e_stop_active_ ? 0 : clamp(joint_effort_command_[j] + C[j], -effort_limit, effort_limit);
                 sim_joints_[j]->SetForce(0, effort);
-                if (e_stop_active_) {
-                    std::cout << "E-STOP ACTIVE: setting effort of joint " << joint_names_[j] << " to 0." << std::endl;
-                }
-                // if ((effort - joint_effort_command_[j] + C[j]) > 1e-4) {
-                //     ROS_WARN_STREAM_THROTTLE(1.0, "SIM EFFORT for JNT '" << joint_names_[j] << "' - saturated from " << joint_effort_command_[j]+ C[j] << " to " << effort);
-                // }
             } break;
 
             case POSITION:
