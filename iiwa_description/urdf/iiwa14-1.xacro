@@ -1,0 +1,785 @@
+<?xml version="1.0"?>
+<!--|
+    Copyright (C) 2019 Learning Algorithms and Systems Laboratory, EPFL, Switzerland
+    Authors:  Konstantinos Chatzilygeroudis (maintainer)
+              Bernardo Fichera
+              Walid Amanhoud
+    email:    costashatz@gmail.com
+              bernardo.fichera@epfl.ch
+              walid.amanhoud@epfl.ch
+    Other contributors:
+              Yoan Mollard (yoan@aubrune.eu)
+    website:  lasa.epfl.ch
+
+    This file is part of iiwa_ros.
+
+    iiwa_ros is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    iiwa_ros is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+|-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Import all Gazebo-customization elements, including Gazebo colors -->
+  <xacro:include filename="$(find iiwa_description)/urdf/iiwa.gazebo.xacro" />
+  <!-- Import Transmissions -->
+  <xacro:include filename="$(find iiwa_description)/urdf/iiwa.transmission.xacro" />
+  <!-- Include Utilities -->
+  <xacro:include filename="$(find iiwa_description)/urdf/utilities.xacro" />
+
+  <!-- some parameters -->
+  <xacro:property name="safety" value="true"/>
+
+  <!-- some constants -->
+  <xacro:property name="safety_controller_k_pos" value="50"/>
+  <xacro:property name="safety_controller_k_vel" value="2"/>
+  <xacro:property name="safety_percentage" value="0.95"/>
+  <!-- <xacro:property name="joint_damping" value="0.5"/> -->
+  <!-- joint limits -->
+  <xacro:property name="joint_limit_1" value="170"/>
+  <xacro:property name="joint_limit_2" value="120"/>
+  <xacro:property name="joint_limit_3" value="170"/>
+  <xacro:property name="joint_limit_4" value="120"/>
+  <xacro:property name="joint_limit_5" value="170"/>
+  <xacro:property name="joint_limit_6" value="120"/>
+  <xacro:property name="joint_limit_7" value="175"/>
+  <!-- max torques per joint -->
+  <xacro:property name="max_effort_1" value="320"/>
+  <xacro:property name="max_effort_2" value="320"/>
+  <xacro:property name="max_effort_3" value="176"/>
+  <xacro:property name="max_effort_4" value="176"/>
+  <xacro:property name="max_effort_5" value="110"/>
+  <xacro:property name="max_effort_6" value="40"/>
+  <xacro:property name="max_effort_7" value="40"/>
+  <!-- max velocities per joint -->
+  <xacro:property name="max_velocity_1" value="${85 * PI / 180.}"/>
+  <xacro:property name="max_velocity_2" value="${85 * PI / 180.}"/>
+  <xacro:property name="max_velocity_3" value="${100 * PI / 180.}"/>
+  <xacro:property name="max_velocity_4" value="${75 * PI/ 180.}"/>
+  <xacro:property name="max_velocity_5" value="${130 * PI / 180.}"/>
+  <xacro:property name="max_velocity_6" value="${135 * PI / 180.}"/>
+  <xacro:property name="max_velocity_7" value="${135 * PI / 180.}"/>
+
+  <!-- from ETHZ -->
+  <xacro:property name="damping_factor" default="1.0"/>
+  <xacro:property name="d0" value="${damping_factor*0.241499}"/>
+  <xacro:property name="d1" value="${damping_factor*0.373279}"/>
+  <xacro:property name="d2" value="${damping_factor*0.110253}"/>
+  <xacro:property name="d3" value="${damping_factor*0.100000}"/>
+  <xacro:property name="d4" value="${damping_factor*0.100000}"/>
+  <xacro:property name="d5" value="${damping_factor*0.124842}"/>
+  <xacro:property name="d6" value="${damping_factor*0.100000}"/>
+
+  <xacro:property name="friction_factor" value="0.0"/>
+  <xacro:property name="f0" value="${friction_factor*0.319088	*	1.0 }"/>
+  <xacro:property name="f1" value="${friction_factor*0.181301}"/>
+  <xacro:property name="f2" value="${friction_factor*0.073019}"/>
+  <xacro:property name="f3" value="${friction_factor*0.176713}"/>
+  <xacro:property name="f4" value="${friction_factor*0.034631	*	1.0 }"/>
+  <xacro:property name="f5" value="${friction_factor*0.133913}"/>
+  <xacro:property name="f6" value="${friction_factor*0.087096 	*	1.0 }"/>
+
+
+
+  <xacro:macro name="iiwa14" params="parent hardware_interface robot_name collision_postfix *origin">
+
+    <!--joint between {parent} and link_0-->
+    <joint name="${parent}_${robot_name}_joint" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="${robot_name}_link_0"/>
+    </joint>
+
+    <link name="${robot_name}_link_0">
+      <inertial>
+        <origin xyz="-0.1 0 0.07" rpy="0 0 0"/>
+        <mass value="5"/>
+        <inertia ixx="0.05"  ixy="0"  ixz="0" iyy="0.06" iyz="0" izz="0.03" />
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/visual/link_0.stl"/>
+        </geometry>
+        <material name="Grey"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/collision/link_0${collision_postfix}.stl"/>
+        </geometry>
+        <material name="Grey"/>
+      </collision>
+
+      <self_collision_checking>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <capsule radius="0.15" length="0.25"/>
+        </geometry>
+      </self_collision_checking>
+
+    </link>
+
+    <!-- joint between link_0 and link_1 -->
+    <joint name="${robot_name}_joint_1" type="revolute">
+      <parent link="${robot_name}_link_0"/>
+      <child link="${robot_name}_link_1"/>
+      <origin xyz="0 0 0.1575" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-joint_limit_1 * PI / 180}" upper="${joint_limit_1 * PI / 180}"
+             effort="${max_effort_1}" velocity="${max_velocity_1}" />
+      <xacro:safe_controller safety="${safety}"
+                               lower="${-safety_percentage * joint_limit_1 * PI / 180}"
+                               upper="${safety_percentage * joint_limit_1 * PI / 180}"
+                               k_p="${safety_controller_k_pos}"
+                               k_v="${safety_controller_k_vel}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d0}" friction="${f0}"/>
+    </joint>
+
+    <link name="${robot_name}_link_1">
+      <inertial>
+        <origin xyz="-0.0035 0.001602 ${-0.031387+0.2025}" rpy="0 0 0"/>
+        <mass value="3.947808"/>
+        <inertia ixx="0.004554"  ixy="0"  ixz="0" iyy="0.004542" iyz="0" izz="0.000289" />
+        <!-- <origin rpy="0 0 0" xyz="0 -0.03 0.12"/> -->
+        <!-- <mass value="5.76"/> -->
+        <!-- <inertia ixx="0.033" ixy="0" ixz="0" iyy="0.0333" iyz="0" izz="0.0123"/> -->
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/visual/link_1.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/collision/link_1${collision_postfix}.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </collision>
+    </link>
+
+    <!-- joint between link_1 and link_2 -->
+    <joint name="${robot_name}_joint_2" type="revolute">
+      <parent link="${robot_name}_link_1"/>
+      <child link="${robot_name}_link_2"/>
+      <origin xyz="0 0 0.2025" rpy="${PI / 2}   0 ${PI}"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-joint_limit_2 * PI / 180}" upper="${joint_limit_2 * PI / 180}"
+             effort="${max_effort_2}" velocity="${max_velocity_2}" />
+      <xacro:safe_controller safety="${safety}"
+                               lower="${-safety_percentage * joint_limit_2 * PI / 180}"
+                               upper="${safety_percentage * joint_limit_2 * PI / 180}"
+                               k_p="${safety_controller_k_pos}"
+                               k_v="${safety_controller_k_vel}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d1}" friction="${f1}"/>
+    </joint>
+
+    <link name="${robot_name}_link_2">
+      <inertial>
+        <origin xyz="0.007671 0.166693 0.003551" rpy="0 0 0"/>
+        <mass value="4.502752"/>
+        <inertia ixx="0.000318"  ixy="0"  ixz="0" iyy="0.018" iyz="0" izz="0.000419" />
+        <!-- <origin rpy="0 0 0" xyz="0.0003 0.059 0.042"/> -->
+        <!-- <mass value="6.35"/> -->
+        <!-- <inertia ixx="0.0305" ixy="0" ixz="0" iyy="0.0304" iyz="0" izz="0.011"/> -->
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/visual/link_2.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/collision/link_2${collision_postfix}.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </collision>
+    </link>
+
+    <!-- joint between link_2 and link_3 -->
+    <joint name="${robot_name}_joint_3" type="revolute">
+      <parent link="${robot_name}_link_2"/>
+      <child link="${robot_name}_link_3"/>
+      <origin xyz="0 0.2045 0" rpy="${PI / 2} 0 ${PI}"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-joint_limit_3 * PI / 180}" upper="${joint_limit_3 * PI / 180}"
+             effort="${max_effort_3}" velocity="${max_velocity_3}" />
+      <xacro:safe_controller safety="${safety}"
+                               lower="${-safety_percentage * joint_limit_3 * PI / 180}"
+                               upper="${safety_percentage * joint_limit_3 * PI / 180}"
+                               k_p="${safety_controller_k_pos}"
+                               k_v="${safety_controller_k_vel}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d2}" friction="${f2}"/>
+    </joint>
+
+    <link name="${robot_name}_link_3">
+      <inertial>
+        <origin xyz="-0.002246 -0.034918 ${-0.026522+0.2155}" rpy="0 0 0"/>
+        <mass value="2.455197"/>
+        <inertia ixx="0.002233"  ixy="-0.000046"  ixz="0" iyy="0.002191" iyz="0" izz="0.000725" />
+        <!-- <origin rpy="0 0 0" xyz="0 0.03 0.13"/> -->
+        <!-- iiwa7 -->
+        <!-- <mass value="4.05623"/> -->
+        <!-- <inertia ixx="0.03204"  ixy="0"  ixz="0" iyy="0.00972" iyz="0.006227" izz="0.03042" /> -->
+        <!-- DRAKE -->
+        <!-- <mass value="3.5"/> -->
+        <!-- <inertia ixx="0.025" ixy="0" ixz="0" iyy="0.0238" iyz="0" izz="0.0076"/> -->
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/visual/link_3.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/collision/link_3${collision_postfix}.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </collision>
+    </link>
+
+    <!-- joint between link_3 and link_4 -->
+    <joint name="${robot_name}_joint_4" type="revolute">
+      <parent link="${robot_name}_link_3"/>
+      <child link="${robot_name}_link_4"/>
+      <origin xyz="0 0 0.2155" rpy="${PI / 2} 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-joint_limit_4 * PI / 180}" upper="${joint_limit_4 * PI / 180}"
+             effort="${max_effort_4}" velocity="${max_velocity_4}" />
+      <xacro:safe_controller safety="${safety}"
+                               lower="${-safety_percentage * joint_limit_4 * PI / 180}"
+                               upper="${safety_percentage * joint_limit_4 * PI / 180}"
+                               k_p="${safety_controller_k_pos}"
+                               k_v="${safety_controller_k_vel}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d3}" friction="${f3}"/>
+    </joint>
+
+    <link name="${robot_name}_link_4">
+      <inertial>
+        <origin xyz="0.000196 -0.052679 0.038182" rpy="0 0 0"/>
+        <mass value="2.611550"/>
+        <inertia ixx="0.038444"  ixy="0.000880"  ixz="-0.001120" iyy="0.011437" iyz="-0.001113" izz="0.049880" /> 
+        <!-- <origin rpy="0 0 0" xyz="0 0.067 0.034"/> -->
+        <!-- <mass value="3.5"/> -->
+        <!-- <inertia ixx="0.017" ixy="0" ixz="0" iyy="0.0164" iyz="0" izz="0.006"/> -->
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/visual/link_4.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/collision/link_4${collision_postfix}.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </collision>
+    </link>
+
+    <!-- joint between link_4 and link_5 -->
+    <joint name="${robot_name}_joint_5" type="revolute">
+      <parent link="${robot_name}_link_4"/>
+      <child link="${robot_name}_link_5"/>
+      <origin xyz="0 0.1845 0" rpy="${-PI / 2} ${PI} 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-joint_limit_5 * PI / 180}" upper="${joint_limit_5 * PI / 180}"
+             effort="${max_effort_5}" velocity="${max_velocity_5}" />
+      <xacro:safe_controller safety="${safety}"
+                               lower="${-safety_percentage * joint_limit_5 * PI / 180}"
+                               upper="${safety_percentage * joint_limit_5 * PI / 180}"
+                               k_p="${safety_controller_k_pos}"
+                               k_v="${safety_controller_k_vel}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d4}" friction="${f4}"/>
+    </joint>
+
+    <link name="${robot_name}_link_5">
+      <inertial>
+        <origin xyz="0.000054 -0.002367 ${-0.211336+0.2155}" rpy="0 0 0"/>
+        <mass value="3.410009"/>
+        <inertia ixx="0.002769"  ixy="0"  ixz="0" iyy="0.002842" iyz="0" izz="0.000117" />
+        <!-- <origin rpy="0 0 0" xyz="0.0001 0.021 0.076"/> -->
+        <!--  iiwa7 -->
+        <!-- <mass value="3.5"/> -->
+        <!-- <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.0087" iyz="0" izz="0.00449"/> -->
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/visual/link_5.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/collision/link_5${collision_postfix}.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </collision>
+    </link>
+
+    <!-- joint between link_5 and link_6 -->
+    <joint name="${robot_name}_joint_6" type="revolute">
+      <parent link="${robot_name}_link_5"/>
+      <child link="${robot_name}_link_6"/>
+      <origin xyz="0 0 0.2155" rpy="${PI / 2} 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-joint_limit_6 * PI / 180}" upper="${joint_limit_6 * PI / 180}"
+             effort="${max_effort_6}" velocity="${max_velocity_6}" />
+      <xacro:safe_controller safety="${safety}"
+                               lower="${-safety_percentage * joint_limit_6 * PI / 180}"
+                               upper="${safety_percentage * joint_limit_6 * PI / 180}"
+                               k_p="${safety_controller_k_pos}"
+                               k_v="${safety_controller_k_vel}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d5}" friction="${f5}"/>
+    </joint>
+
+    <link name="${robot_name}_link_6">
+      <inertial>
+        <origin xyz="0.000492 0.020190 -0.027496" rpy="0 0 0"/>
+        <mass value="3.387949"/>
+        <inertia ixx="0.000500"  ixy="0"  ixz="0" iyy="0.002809" iyz="0" izz="0.002315" />
+        <!-- <origin rpy="0 0 0" xyz="0 0.0006 0.0004"/> -->
+        <!--  iiwa7 -->
+        <!-- <mass value="2.3466"/> -->
+        <!-- <inertia ixx="0.006509"  ixy="0"  ixz="0" iyy="0.006259" iyz="0.00031891" izz="0.004527" /> -->
+        <!-- DRAKE -->
+        <!-- <mass value="1.8"/> -->
+        <!-- <inertia ixx="0.0049" ixy="0" ixz="0" iyy="0.0047" iyz="0" izz="0.0036"/> -->
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/visual/link_6.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/collision/link_6${collision_postfix}.stl"/>
+        </geometry>
+        <material name="Orange"/>
+      </collision>
+    </link>
+
+    <!-- joint between link_6 and link_7 -->
+    <joint name="${robot_name}_joint_7" type="revolute">
+      <parent link="${robot_name}_link_6"/>
+      <child link="${robot_name}_link_7"/>
+      <origin xyz="0 0.081 0" rpy="${- PI / 2} ${PI} 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-joint_limit_7 * PI / 180}" upper="${joint_limit_7 * PI / 180}"
+             effort="${max_effort_7}" velocity="${max_velocity_7}" />
+      <xacro:safe_controller safety="${safety}"
+                               lower="${-safety_percentage * joint_limit_7 * PI / 180}"
+                               upper="${safety_percentage * joint_limit_7 * PI / 180}"
+                               k_p="${safety_controller_k_pos}"
+                               k_v="${safety_controller_k_vel}"/>
+      <!-- <dynamics damping="${joint_damping}"/> -->
+      <dynamics damping="${d6}" friction="${f6}"/>
+    </joint>
+
+    <link name="${robot_name}_link_7">
+      <inertial>
+        <origin xyz="-0.03465 -0.023242 ${0.071377-0.0}" rpy="0 0 0"/>
+        <mass value="0.35432"/> 
+        <inertia ixx="0.007946"  ixy="0.000221"  ixz="0.000294" iyy="0.010889" iyz="-0.000294" izz="0.002944" />
+        <!-- <origin rpy="0 0 0" xyz="0 0 0.02"/> -->
+        <!-- iiwa7 -->
+        <!-- <mass value="3.129"/> -->
+        <!-- <inertia ixx="0.01464"  ixy="0.0005912"  ixz="0" iyy="0.01465" iyz="0" izz="0.002872" /> -->
+        <!-- DRAKE -->
+        <!-- <mass value="1.2"/> -->
+        <!-- <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/> -->
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/visual/link_7.stl"/>
+        </geometry>
+        <material name="Grey"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/iiwa14/collision/link_7${collision_postfix}.stl"/>
+        </geometry>
+        <material name="Grey"/>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_joint_ee" type="fixed">
+      <parent link="${robot_name}_link_7"/>
+      <child link="${robot_name}_link_ee"/>
+      <origin xyz="0 0 0.045" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${robot_name}_link_ee">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <!-- <origin xyz="0 0 0.155" rpy="0 0 0"/> -->
+        <mass value="1e-6"/>
+        <inertia ixx="1e-6"  ixy="0"  ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+      </inertial>
+    </link>
+
+    <joint name="${robot_name}_joint_gripper" type="fixed">
+      <parent link="${robot_name}_link_ee"/>
+      <child link="${robot_name}_link_gripper"/>
+      <origin xyz="0 0 0.16" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+    <link name="${robot_name}_link_gripper">
+      <inertial>
+        <!-- CoM expressed in ${robot_name}_link_gripper frame -->
+        <!-- <origin xyz="0 0 -0.11813481" rpy="0 0 0"/>
+        <mass value="0.365848541"/> -->
+        <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+        <mass value="1e-6"/>
+        <!-- Inertia about the CoM, expressed in link frame axes -->
+        <inertia ixx="0.00129517580"  ixy="0" ixz="-0.00000000008720478"
+          iyy="0.000340974786" iyz="-0.0000000453920893" izz="0.00108551857"/>
+          <!-- “realistic lumped” (0.9–1.2 kg, CoM ~4–6 cm forward of the flange) -->
+      </inertial>
+    </link>
+
+    <!-- <joint name="iiwa_gripper_joint" type="fixed">
+      <parent link="${robot_name}_link_ee"/>
+      <child link="robotiq_arg2f_base_link"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </joint>
+
+    <link name="robotiq_arg2f_base_link">
+      <inertial>
+        <origin rpy="0 0 0" xyz="8.625E-08 -4.6583E-06 0.03145"/>
+        <mass value="0.22652"/>
+        <inertia ixx="0.00020005" ixy="-4.2442E-10" ixz="-2.9069E-10" iyy="0.00017832" iyz="-3.4402E-08" izz="0.00013478"/>
+      </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_base_link.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/collision/robotiq_arg2f_base_link.stl"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="left_outer_knuckle">
+      <inertial>
+          <origin xyz="-0.000200000000003065 0.0199435877845359 0.0292245259211331" rpy="0 0 0" />
+          <mass value="0.00853198276973456" />
+          <inertia ixx="2.89328108496468E-06" ixy="-1.57935047237397E-19" ixz="-1.93980378593255E-19" iyy="1.86719750325683E-06" iyz="-1.21858577871576E-06" izz="1.21905238907251E-06" />
+          </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_outer_knuckle.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/collision/robotiq_arg2f_85_outer_knuckle.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="left_outer_finger">
+      <inertial>
+          <origin xyz="0.00030115855001899 0.0373907951953854 -0.0208027427000385" rpy="0 0 0" />
+          <mass value="0.022614240507152" />
+          <inertia ixx="1.52518312458174E-05" ixy="9.76583423954399E-10" ixz="-5.43838577022588E-10" iyy="6.17694243867776E-06" iyz="6.78636130740228E-06" izz="1.16494917907219E-05" />
+          </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_outer_finger.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/collision/robotiq_arg2f_85_outer_finger.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="left_inner_finger">
+      <inertial>
+          <origin xyz="0.000299999999999317 0.0160078233491243 -0.0136945669206257" rpy="0 0 0" />
+          <mass value="0.0104003125914103" />
+          <inertia ixx="2.71909453810972E-06" ixy="1.35402465472579E-21" ixz="-7.1817349065269E-22" iyy="7.69100314106116E-07" iyz="6.74715432769696E-07" izz="2.30315190420171E-06" />
+          </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_umi.stl" scale="0.0001 0.0001 0.0001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_umi.stl" scale="0.0001 0.0001 0.0001"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="left_inner_finger_pad">
+      <inertial>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="0.001"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+      </inertial>
+    </link>
+    <link name="left_inner_knuckle">
+      <inertial>
+          <origin xyz="0.000123011831763771 0.0507850843201817 0.00103968640075166" rpy="0 0 0" />
+        <mass value="0.0271177346495152" />
+          <inertia ixx="2.61910379223783E-05" ixy="-2.43616858946494E-07" ixz="-6.37789906117123E-09" iyy="2.8270243746167E-06" iyz="-5.37200748039765E-07" izz="2.83695868220296E-05" />
+          </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_inner_knuckle.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/collision/robotiq_arg2f_85_inner_knuckle.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="right_outer_knuckle">
+      <inertial>
+          <origin xyz="-0.000200000000003065 0.0199435877845359 0.0292245259211331" rpy="0 0 0" />
+          <mass value="0.00853198276973456" />
+          <inertia ixx="2.89328108496468E-06" ixy="-1.57935047237397E-19" ixz="-1.93980378593255E-19" iyy="1.86719750325683E-06" iyz="-1.21858577871576E-06" izz="1.21905238907251E-06" />
+          </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_outer_knuckle.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/collision/robotiq_arg2f_85_outer_knuckle.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="right_outer_finger">
+      <inertial>
+          <origin xyz="0.00030115855001899 0.0373907951953854 -0.0208027427000385" rpy="0 0 0" />
+          <mass value="0.022614240507152" />
+          <inertia ixx="1.52518312458174E-05" ixy="9.76583423954399E-10" ixz="-5.43838577022588E-10" iyy="6.17694243867776E-06" iyz="6.78636130740228E-06" izz="1.16494917907219E-05" />
+          </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_outer_finger.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/collision/robotiq_arg2f_85_outer_finger.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="right_inner_finger">
+      <inertial>
+          <origin xyz="0.000299999999999317 0.0160078233491243 -0.0136945669206257" rpy="0 0 0" />
+          <mass value="0.0104003125914103" />
+          <inertia ixx="2.71909453810972E-06" ixy="1.35402465472579E-21" ixz="-7.1817349065269E-22" iyy="7.69100314106116E-07" iyz="6.74715432769696E-07" izz="2.30315190420171E-06" />
+          </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_umi.stl" scale="0.0001 0.0001 0.0001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_umi.stl" scale="0.0001 0.0001 0.0001"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="right_inner_finger_pad">
+      <inertial>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <mass value="0.001"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+      </inertial>
+    </link>
+    <link name="right_inner_knuckle">
+      <inertial>
+          <origin xyz="0.000123011831763771 0.0507850843201817 0.00103968640075166" rpy="0 0 0" />
+        <mass value="0.0271177346495152" />
+          <inertia ixx="2.61910379223783E-05" ixy="-2.43616858946494E-07" ixz="-6.37789906117123E-09" iyy="2.8270243746167E-06" iyz="-5.37200748039765E-07" izz="2.83695868220296E-05" />
+          </inertial>
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_inner_knuckle.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/collision/robotiq_arg2f_85_inner_knuckle.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="finger_joint" type="fixed">
+      <origin rpy="0 0 3.141592653589793" xyz="0 -0.0306011 0.054904"/>
+      <parent link="robotiq_arg2f_base_link"/>
+      <child link="left_outer_knuckle"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="1000" lower="0" upper="0.8" velocity="2.0"/>
+    </joint>
+    <joint name="left_outer_finger_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0.0315 -0.0041"/>
+      <parent link="left_outer_knuckle"/>
+      <child link="left_outer_finger"/>
+      <axis xyz="1 0 0"/>
+    </joint>
+    <joint name="left_inner_knuckle_joint" type="fixed">
+      <origin rpy="0 0 3.141592653589793" xyz="0 -0.0127 0.06142"/>
+      <parent link="robotiq_arg2f_base_link"/>
+      <child link="left_inner_knuckle"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="1000" lower="0" upper="0.8757" velocity="2.0"/>
+      <mimic joint="finger_joint" multiplier="1" offset="0"/>
+    </joint>
+    <joint name="left_inner_finger_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0.0061 0.0471"/>
+      <parent link="left_outer_finger"/>
+      <child link="left_inner_finger"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="1000" lower="0" upper="0.8757" velocity="2.0"/>
+      <mimic joint="finger_joint" multiplier="-1" offset="0"/>
+    </joint>
+    <joint name="left_inner_finger_pad_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 -0.0220203446692936 0.03242"/>
+      <parent link="left_inner_finger"/>
+      <child link="left_inner_finger_pad"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+    <joint name="right_outer_knuckle_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0.0306011 0.054904"/>
+      <parent link="robotiq_arg2f_base_link"/>
+      <child link="right_outer_knuckle"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="1000" lower="0" upper="0.81" velocity="2.0"/>
+      <mimic joint="finger_joint" multiplier="1" offset="0"/>
+    </joint>
+    <joint name="right_outer_finger_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0.0315 -0.0041"/>
+      <parent link="right_outer_knuckle"/>
+      <child link="right_outer_finger"/>
+      <axis xyz="1 0 0"/>
+    </joint>
+    <joint name="right_inner_knuckle_joint" type="fixed">
+      <origin rpy="0 0 0.0" xyz="0 0.0127 0.06142"/>
+      <parent link="robotiq_arg2f_base_link"/>
+      <child link="right_inner_knuckle"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="1000" lower="0" upper="0.8757" velocity="2.0"/>
+      <mimic joint="finger_joint" multiplier="1" offset="0"/>
+    </joint>
+    <joint name="right_inner_finger_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0.0061 0.0471"/>
+      <parent link="right_outer_finger"/>
+      <child link="right_inner_finger"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="1000" lower="0" upper="0.8757" velocity="2.0"/>
+      <mimic joint="finger_joint" multiplier="-1" offset="0"/>
+    </joint>
+    <joint name="right_inner_finger_pad_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 -0.0220203446692936 0.03242"/>
+      <parent link="right_inner_finger"/>
+      <child link="right_inner_finger_pad"/>
+      <axis xyz="0 0 1"/>
+    </joint> -->
+
+    <!--Extensions -->
+    <xacro:iiwa_gazebo robot_name="${robot_name}" />
+    <xacro:iiwa_transmission hardware_interface="${hardware_interface}"/>
+
+  </xacro:macro>
+
+</robot>
+
+    

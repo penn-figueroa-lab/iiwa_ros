@@ -402,56 +402,27 @@
       </inertial>
     </link>
 
-
-    <joint name="${robot_name}_joint_pot" type="fixed">
-    <!-- prismatic -->
-      <parent link="iiwa_link_ee"/>
-      <child link="iiwa_link_pot"/>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+    <joint name="${robot_name}_joint_gripper" type="fixed">
+      <parent link="${robot_name}_link_ee"/>
+      <child link="${robot_name}_link_gripper"/>
+      <origin xyz="0 0 0.16" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
-      <limit lower="0" upper="1"
-             effort="100" velocity="100" />
-      <!-- <origin rpy="0 0 0" xyz="0.015 -0.02 0.16"/> HIGHLY TUNED-->
-      <!-- <origin rpy="0 0 0" xyz="-0.01 -0.01 0.16"/> -->
-      <!-- <origin rpy="0 1.570796 0" xyz="0.095 0 0.15"/> -->
     </joint>
 
-    <!-- <joint name="${robot_name}_joint_7" type="revolute">
-      <parent link="${robot_name}_link_6"/>
-      <child link="${robot_name}_link_7"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
-      <limit lower="${-joint_limit_7 * PI / 180}" upper="${joint_limit_7 * PI / 180}"
-             effort="${max_effort_7}" velocity="${max_velocity_7}" />
-      <xacro:safe_controller safety="${safety}"
-                               lower="${-safety_percentage * joint_limit_7 * PI / 180}"
-                               upper="${safety_percentage * joint_limit_7 * PI / 180}"
-                               k_p="${safety_controller_k_pos}"
-                               k_v="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
-    </joint>
-     -->
-    <link name="iiwa_link_pot">
+    <link name="${robot_name}_link_gripper">
       <inertial>
-        <origin rpy="0 1.57 0" xyz="0 0 0"/>
-        <mass value="0.0"/>
-        <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+        <!-- CoM expressed in ${robot_name}_link_gripper frame -->
+        <!-- <origin xyz="0 0 -0.11813481" rpy="0 0 0"/>
+        <mass value="0.365848541"/> -->
+        <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+        <mass value="1e-6"/>
+        <!-- Inertia about the CoM, expressed in link frame axes -->
+        <inertia ixx="0.00129517580"  ixy="0" ixz="-0.00000000008720478"
+          iyy="0.000340974786" iyz="-0.0000000453920893" izz="0.00108551857"/>
+          <!-- “realistic lumped” (0.9–1.2 kg, CoM ~4–6 cm forward of the flange) -->
       </inertial>
-      <!-- <visual>
-        <origin rpy="0 1.57 0" xyz="0 0 0"/>
-        <geometry>
-          <cylinder radius="0.1524" length="0.3556"/>
-        </geometry>
-        <material name="Grey"/>
-      </visual> -->
-      <collision>
-        <origin rpy="0 1.57 0" xyz="0 0 0"/>
-        <geometry>
-          <cylinder radius="0.1524" length="0.3556"/>
-        </geometry>
-        <material name="Grey"/>
-      </collision>
     </link>
+
     <!--Extensions -->
     <xacro:iiwa_gazebo robot_name="${robot_name}" />
     <xacro:iiwa_transmission hardware_interface="${hardware_interface}"/>
