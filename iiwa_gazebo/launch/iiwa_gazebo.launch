@@ -40,7 +40,7 @@
     <arg name="robot_name" default="iiwa"/>
     <arg name="model" default="14" />
 
-    <arg name="initial_joint_positions"
+    <!-- <arg name="initial_joint_positions"
         doc="Initial joint configuration of the kuka. Specify as a list of name/value pairs in form of '-J [name-of-joint] [value-in-rad]'. Default is a 90 degree bend in the elbow"
         default="-J $(arg robot_name)_joint_1 0
                     -J $(arg robot_name)_joint_2 1.30899694
@@ -49,6 +49,16 @@
                     -J $(arg robot_name)_joint_5 0
                     -J $(arg robot_name)_joint_6 -1.35191731
                     -J $(arg robot_name)_joint_7 0"
+    /> -->
+    <arg name="initial_joint_positions"
+        doc="Initial joint configuration of the kuka. Specify as a list of name/value pairs in form of '-J [name-of-joint] [value-in-rad]'. Default is a 90 degree bend in the elbow"
+        default="-J $(arg robot_name)_joint_1 -1.09746303
+                    -J $(arg robot_name)_joint_2 1.11282193
+                    -J $(arg robot_name)_joint_3 1.60221225
+                    -J $(arg robot_name)_joint_4 -1.90712127
+                    -J $(arg robot_name)_joint_5 0.26581365
+                    -J $(arg robot_name)_joint_6 -0.69464104
+                    -J $(arg robot_name)_joint_7 -1.26326931"
     />
 
     <!-- Select the controller -->
