@@ -304,8 +304,8 @@ namespace iiwa_ros {
 
         _position_joint_limits_interface.enforceLimits(elapsed_time);
         _position_joint_saturation_interface.enforceLimits(elapsed_time);
-        // _effort_joint_limits_interface.enforceLimits(elapsed_time);
-        // _effort_joint_saturation_interface.enforceLimits(elapsed_time);
+        _effort_joint_limits_interface.enforceLimits(elapsed_time);
+        _effort_joint_saturation_interface.enforceLimits(elapsed_time);
         _velocity_joint_limits_interface.enforceLimits(elapsed_time);
         _velocity_joint_saturation_interface.enforceLimits(elapsed_time);
 
@@ -359,16 +359,7 @@ namespace iiwa_ros {
             return true;
         }
 
-        ROS_INFO_STREAM_NAMED("Iiwa", "Attempting FRI connection to " << _remote_host << ":" << _port);
-        bool ok = _fri_connection.open(_port, _remote_host.c_str());
-        if (ok) {
-            ROS_INFO_STREAM_NAMED("Iiwa", "FRI connection opened to " << _remote_host << ":" << _port);
-        }
-        else {
-            ROS_ERROR_STREAM_NAMED("Iiwa", "Failed to open FRI connection to " << _remote_host << ":" << _port << ". Check network, IPs, and that the robot FRI app is running.");
-        }
-
-        return ok;
+        return _fri_connection.open(_port, _remote_host.c_str());
     }
 
     void Iiwa::_disconnect_fri()
