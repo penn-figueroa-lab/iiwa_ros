@@ -113,8 +113,8 @@ namespace iiwa_gazebo {
         // Check if effort limits are violated
         std::vector<double> effort_cmd = joint_effort_command_;
 
-        ej_sat_interface_.enforceLimits(period);
-        ej_limits_interface_.enforceLimits(period);
+        // ej_sat_interface_.enforceLimits(period);
+        // ej_limits_interface_.enforceLimits(period);
         pj_sat_interface_.enforceLimits(period);
         pj_limits_interface_.enforceLimits(period);
         vj_sat_interface_.enforceLimits(period);

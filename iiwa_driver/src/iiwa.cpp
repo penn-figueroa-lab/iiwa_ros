@@ -304,7 +304,7 @@ namespace iiwa_ros {
 
         _position_joint_limits_interface.enforceLimits(elapsed_time);
         _position_joint_saturation_interface.enforceLimits(elapsed_time);
-        _effort_joint_limits_interface.enforceLimits(elapsed_time);
+        // _effort_joint_limits_interface.enforceLimits(elapsed_time);
         _effort_joint_saturation_interface.enforceLimits(elapsed_time);
         _velocity_joint_limits_interface.enforceLimits(elapsed_time);
         _velocity_joint_saturation_interface.enforceLimits(elapsed_time);
