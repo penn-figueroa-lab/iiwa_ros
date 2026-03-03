@@ -439,7 +439,8 @@
     <joint name="${robot_name}_joint_gripper" type="fixed">
       <parent link="${robot_name}_link_ee"/>
       <child link="${robot_name}_link_gripper"/>
-      <origin xyz="0 0 0.16" rpy="0 0 0"/>
+      <!-- <origin xyz="0 0 0.16" rpy="0 0 0"/> -->
+      <origin xyz="0 0 0.24" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
