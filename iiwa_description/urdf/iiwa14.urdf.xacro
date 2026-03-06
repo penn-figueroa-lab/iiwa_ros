@@ -29,12 +29,16 @@
   <xacro:include filename="$(find iiwa_description)/urdf/materials.xacro" />
   <!--Import the lbr iiwa macro -->
   <xacro:include filename="$(find iiwa_description)/urdf/iiwa14.xacro"/>
+  <!-- Optional UMI gripper macro -->
+  <xacro:include filename="$(find iiwa_description)/urdf/robotiq_2f85_umi_gripper.xacro"/>
 
   <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
   <xacro:arg name="robot_name" default="iiwa"/>
   <xacro:arg name="origin_xyz" default="0 0 0"/>
   <xacro:arg name="origin_rpy" default="0 0 0"/>
   <xacro:arg name="simple_collision" default="false"/>
+  <!-- Toggle to show/hide the Robotiq UMI gripper in the URDF -->
+  <xacro:arg name="with_gripper" default="true"/>
 
   <!-- collision shapes -->
   <xacro:if value="$(arg simple_collision)">
@@ -51,5 +55,10 @@
   <xacro:iiwa14 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="world" collision_postfix="$(arg collision_postfix)">
     <origin xyz="$(arg origin_xyz)" rpy="$(arg origin_rpy)" />
   </xacro:iiwa14>
+
+  <!-- Optional gripper attachment -->
+  <xacro:if value="$(arg with_gripper)">
+    <xacro:robotiq_2f85_umi_gripper parent="$(arg robot_name)_link_ee" robot_name="$(arg robot_name)"/>
+  </xacro:if>
 
 </robot>
