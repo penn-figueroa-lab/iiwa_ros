@@ -101,7 +101,7 @@
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_umi2.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/gripper_inner_finger.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <material name="">
           <color rgba="0.1 0.1 0.1 1"/>
@@ -110,7 +110,7 @@
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_umi2.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/gripper_inner_finger.stl" scale="0.001 0.001 0.001"/>
         </geometry>
       </collision>
     </link>
@@ -201,7 +201,7 @@
       <visual>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_umi2.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/gripper_inner_finger.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <material name="">
           <color rgba="0.1 0.1 0.1 1"/>
@@ -210,7 +210,7 @@
       <collision>
         <origin rpy="0 0 0" xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/robotiq_arg2f_85_umi2.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://robotiq_2f_85_gripper_visualization/meshes/visual/gripper_inner_finger.stl" scale="0.001 0.001 0.001"/>
         </geometry>
       </collision>
     </link>
@@ -272,7 +272,7 @@
     </joint>
 
     <joint name="${prefix}left_inner_finger_joint" type="fixed">
-      <origin rpy="0 0 0" xyz="0 0.0061 0.0471"/>
+      <origin rpy="0 0 1.57079632679" xyz="0 0.0061 0.0471"/>
       <parent link="${prefix}left_outer_finger"/>
       <child link="${prefix}left_inner_finger"/>
       <axis xyz="1 0 0"/>
@@ -313,7 +313,7 @@
     </joint>
 
     <joint name="${prefix}right_inner_finger_joint" type="fixed">
-      <origin rpy="0 0 0" xyz="0 0.0061 0.0471"/>
+      <origin rpy="0 0 1.57079632679" xyz="0 0.0061 0.0471"/>
       <parent link="${prefix}right_outer_finger"/>
       <child link="${prefix}right_inner_finger"/>
       <axis xyz="1 0 0"/>
