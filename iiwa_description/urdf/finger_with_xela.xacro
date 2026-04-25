@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!--
+    Xela-instrumented finger assembly for the Robotiq 2F-85 gripper.
+
+    Macro: xela_finger
+      prefix  — link/joint name prefix, e.g. "left_finger_" or "right_finger_"
+      parent  — inner finger link to attach to (e.g. "left_inner_finger")
+
+    Kinematic chain:
+      parent  →(attach_joint)→  c_049_distale_distale
+              →(finger joint)→  part_1
+              →(xela joint)  →  texels
+              →(taxel joints)→  taxel_frame_1 … taxel_frame_24
+  -->
+
+  <!-- Helper: lightweight dummy link used for each taxel frame -->
+  <xacro:macro name="xela_taxel_link" params="name">
+    <link name="${name}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="1e-9"/>
+        <inertia ixx="1e-12" ixy="0" ixz="0" iyy="1e-12" iyz="0" izz="1e-12"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+
+  <!-- Helper: fixed joint from texels link to one taxel frame -->
+  <xacro:macro name="xela_taxel_joint" params="prefix num tx tz">
+    <joint name="${prefix}taxel_frame_joint_${num}" type="fixed">
+      <origin xyz="${tx} 0 ${tz}" rpy="1.5708 0 3.14159"/>
+      <parent link="${prefix}texels"/>
+      <child  link="${prefix}taxel_frame_${num}"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Full single-finger + Xela sensor assembly -->
+  <xacro:macro name="xela_finger" params="prefix parent">
+
+    <!-- ── Attachment to gripper inner finger ──────────────────────────── -->
+    <joint name="${prefix}attach_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="${parent}"/>
+      <child  link="${prefix}c_049_distale_distale"/>
+    </joint>
+
+    <!-- ── Links ─────────────────────────────────────────────────────────── -->
+    <link name="${prefix}c_049_distale_distale">
+      <inertial>
+        <origin xyz="-4.008e-09 -0.0107942 0.00493399" rpy="0 0 0"/>
+        <mass value="0.0322593"/>
+        <inertia ixx="2.38723e-06" ixy="-0" ixz="-1e-12"
+                 iyy="1.55748e-06" iyz="4.76178e-07" izz="2.46263e-06"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 -0.0179011 0.00651548" rpy="-3.14159 -1.5708 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/finger/c_049_distale_distale.stl"/>
+        </geometry>
+        <material name="c_049_distale_distale_material">
+          <color rgba="0.301961 0.301961 0.301961 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 -0.0179011 0.00651548" rpy="-3.14159 -1.5708 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/finger/c_049_distale_distale.stl"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}part_1">
+      <inertial>
+        <origin xyz="0.0078477 -4.196e-08 -0.0469412" rpy="0 0 0"/>
+        <mass value="0.0786109"/>
+        <inertia ixx="8.77281e-05" ixy="-7e-12" ixz="2.85426e-06"
+                 iyy="7.61024e-05" iyz="-1.91e-10" izz="1.71168e-05"/>
+      </inertial>
+      <visual>
+        <origin xyz="-0.0036 0 0" rpy="-3.14159 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/finger/part_1.stl"/>
+        </geometry>
+        <material name="part_1_material">
+          <!-- <color rgba="0.917647 0.917647 0.917647 1"/> -->
+          <color rgba="0.1 0.1 0.1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="-0.0036 0 0" rpy="-3.14159 0 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/finger/part_1.stl"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}texels">
+      <inertial>
+        <origin xyz="-0.0242941 0.0023277 0" rpy="0 0 0"/>
+        <mass value="0.0110542"/>
+        <inertia ixx="8.15276e-07" ixy="-7.579e-09" ixz="-0"
+                 iyy="2.93421e-06" iyz="0" izz="2.16055e-06"/>
+      </inertial>
+      <visual>
+        <origin xyz="-0.022675 0 5e-06" rpy="-1.5708 -1.5708 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/finger/xela.stl"/>
+        </geometry>
+        <material name="xela_material">
+          <color rgba="0.301961 0.301961 0.301961 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="-0.022675 0 5e-06" rpy="-1.5708 -1.5708 0"/>
+        <geometry>
+          <mesh filename="package://iiwa_description/meshes/finger/xela.stl"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- 24 taxel dummy links -->
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_1"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_2"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_3"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_4"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_5"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_6"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_7"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_8"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_9"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_10"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_11"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_12"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_13"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_14"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_15"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_16"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_17"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_18"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_19"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_20"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_21"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_22"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_23"/>
+    <xacro:xela_taxel_link name="${prefix}taxel_frame_24"/>
+
+    <!-- ── Structural joints ─────────────────────────────────────────────── -->
+    <!-- c_049 → part_1 -->
+    <joint name="${prefix}finger" type="fixed">
+      <origin xyz="0 -0.0114011 0.0130155" rpy="3.14159 0 1.5708"/>
+      <parent link="${prefix}c_049_distale_distale"/>
+      <child  link="${prefix}part_1"/>
+    </joint>
+
+    <!-- part_1 → texels (Xela PCB) -->
+    <joint name="${prefix}xela" type="fixed">
+      <origin xyz="0.0025 0 -0.104" rpy="-1.5708 1.5708 0"/>
+      <parent link="${prefix}part_1"/>
+      <child  link="${prefix}texels"/>
+    </joint>
+
+    <!-- ── Taxel frame joints (texels → taxel_frame_k) ────────────────────
+         Positions from iiwa14_with_fingers.urdf; all share rpy="1.5708 0 3.14159"
+         Layout order matches the URDF joint numbering (not sensor SDK order).    -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="1"  tx="-0.0282894"  tz=" 0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="2"  tx="-0.0355394"  tz=" 0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="3"  tx="-0.0355394"  tz="-0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="4"  tx="-0.0282894"  tz="-0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="5"  tx="-0.0355394"  tz=" 0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="6"  tx="-0.0210394"  tz=" 0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="7"  tx="-0.0210394"  tz=" 0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="8"  tx="-0.0210394"  tz="-0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="9"  tx="-0.0137894"  tz="-0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="10" tx="-0.00653939" tz=" 0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="11" tx="-0.00653939" tz="-0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="12" tx="-0.0137894"  tz=" 0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="13" tx="-0.0282894"  tz="-0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="14" tx="-0.00653939" tz=" 0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="15" tx="-0.0137894"  tz=" 0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="16" tx="-0.0427894"  tz="-0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="17" tx="-0.0282894"  tz=" 0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="18" tx="-0.0427894"  tz=" 0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="19" tx="-0.0137894"  tz="-0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="20" tx="-0.00653939" tz="-0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="21" tx="-0.0427894"  tz=" 0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="22" tx="-0.0210394"  tz="-0.010875"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="23" tx="-0.0355394"  tz="-0.003625"/>
+    <xacro:xela_taxel_joint prefix="${prefix}" num="24" tx="-0.0427894"  tz="-0.003625"/>
+
+  </xacro:macro>
+
+</robot>

@@ -31,6 +31,8 @@
   <xacro:include filename="$(find iiwa_description)/urdf/iiwa14.xacro"/>
   <!-- Optional UMI gripper macro -->
   <xacro:include filename="$(find iiwa_description)/urdf/robotiq_2f85_umi_gripper.xacro"/>
+  <!-- Optional Xela-instrumented finger assemblies -->
+  <xacro:include filename="$(find iiwa_description)/urdf/finger_with_xela.xacro"/>
 
   <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
   <xacro:arg name="robot_name" default="iiwa"/>
@@ -39,6 +41,8 @@
   <xacro:arg name="simple_collision" default="false"/>
   <!-- Toggle to show/hide the Robotiq UMI gripper in the URDF -->
   <xacro:arg name="with_gripper" default="true"/>
+  <!-- Toggle to attach Xela finger assemblies (requires with_gripper:=true) -->
+  <xacro:arg name="with_fingers" default="true"/>
 
   <!-- collision shapes -->
   <xacro:if value="$(arg simple_collision)">
@@ -59,6 +63,12 @@
   <!-- Optional gripper attachment -->
   <xacro:if value="$(arg with_gripper)">
     <xacro:robotiq_2f85_umi_gripper parent="$(arg robot_name)_link_ee" robot_name="$(arg robot_name)"/>
+
+    <!-- Optional Xela finger assemblies (left + right) -->
+    <xacro:if value="$(arg with_fingers)">
+      <xacro:xela_finger prefix="left_finger_"  parent="left_inner_finger"/>
+      <xacro:xela_finger prefix="right_finger_" parent="right_inner_finger"/>
+    </xacro:if>
   </xacro:if>
 
 </robot>
