@@ -161,32 +161,33 @@
     </joint>
 
     <!-- ── Taxel frame joints (texels → taxel_frame_k) ────────────────────
-         Positions from iiwa14_with_fingers.urdf; all share rpy="1.5708 0 3.14159"
-         Layout order matches the URDF joint numbering (not sensor SDK order).    -->
-    <xacro:xela_taxel_joint prefix="${prefix}" num="1"  tx="-0.0282894"  tz=" 0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="2"  tx="-0.0355394"  tz=" 0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="3"  tx="-0.0355394"  tz="-0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="4"  tx="-0.0282894"  tz="-0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="5"  tx="-0.0355394"  tz=" 0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="6"  tx="-0.0210394"  tz=" 0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="7"  tx="-0.0210394"  tz=" 0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="8"  tx="-0.0210394"  tz="-0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="9"  tx="-0.0137894"  tz="-0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="10" tx="-0.00653939" tz=" 0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="11" tx="-0.00653939" tz="-0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="12" tx="-0.0137894"  tz=" 0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="13" tx="-0.0282894"  tz="-0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="14" tx="-0.00653939" tz=" 0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="15" tx="-0.0137894"  tz=" 0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="16" tx="-0.0427894"  tz="-0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="17" tx="-0.0282894"  tz=" 0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="18" tx="-0.0427894"  tz=" 0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="19" tx="-0.0137894"  tz="-0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="20" tx="-0.00653939" tz="-0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="21" tx="-0.0427894"  tz=" 0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="22" tx="-0.0210394"  tz="-0.010875"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="23" tx="-0.0355394"  tz="-0.003625"/>
-    <xacro:xela_taxel_joint prefix="${prefix}" num="24" tx="-0.0427894"  tz="-0.003625"/>
+         Joint num N corresponds to SDK index N-1 = (row)*6 + col, row-major.
+         Rows 0-3: tz = +0.010875, +0.003625, -0.003625, -0.010875
+         Cols 0-5: tx from least-negative to most-negative (x-descending)       -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="1"  tx="-0.00653939" tz=" 0.010875"/>  <!-- SDK  0 r0c0 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="2"  tx="-0.0137894"  tz=" 0.010875"/>  <!-- SDK  1 r0c1 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="3"  tx="-0.0210394"  tz=" 0.010875"/>  <!-- SDK  2 r0c2 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="4"  tx="-0.0282894"  tz=" 0.010875"/>  <!-- SDK  3 r0c3 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="5"  tx="-0.0355394"  tz=" 0.010875"/>  <!-- SDK  4 r0c4 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="6"  tx="-0.0427894"  tz=" 0.010875"/>  <!-- SDK  5 r0c5 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="7"  tx="-0.00653939" tz=" 0.003625"/>  <!-- SDK  6 r1c0 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="8"  tx="-0.0137894"  tz=" 0.003625"/>  <!-- SDK  7 r1c1 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="9"  tx="-0.0210394"  tz=" 0.003625"/>  <!-- SDK  8 r1c2 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="10" tx="-0.0282894"  tz=" 0.003625"/>  <!-- SDK  9 r1c3 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="11" tx="-0.0355394"  tz=" 0.003625"/>  <!-- SDK 10 r1c4 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="12" tx="-0.0427894"  tz=" 0.003625"/>  <!-- SDK 11 r1c5 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="13" tx="-0.00653939" tz="-0.003625"/>  <!-- SDK 12 r2c0 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="14" tx="-0.0137894"  tz="-0.003625"/>  <!-- SDK 13 r2c1 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="15" tx="-0.0210394"  tz="-0.003625"/>  <!-- SDK 14 r2c2 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="16" tx="-0.0282894"  tz="-0.003625"/>  <!-- SDK 15 r2c3 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="17" tx="-0.0355394"  tz="-0.003625"/>  <!-- SDK 16 r2c4 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="18" tx="-0.0427894"  tz="-0.003625"/>  <!-- SDK 17 r2c5 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="19" tx="-0.00653939" tz="-0.010875"/>  <!-- SDK 18 r3c0 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="20" tx="-0.0137894"  tz="-0.010875"/>  <!-- SDK 19 r3c1 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="21" tx="-0.0210394"  tz="-0.010875"/>  <!-- SDK 20 r3c2 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="22" tx="-0.0282894"  tz="-0.010875"/>  <!-- SDK 21 r3c3 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="23" tx="-0.0355394"  tz="-0.010875"/>  <!-- SDK 22 r3c4 -->
+    <xacro:xela_taxel_joint prefix="${prefix}" num="24" tx="-0.0427894"  tz="-0.010875"/>  <!-- SDK 23 r3c5 -->
 
   </xacro:macro>
 
