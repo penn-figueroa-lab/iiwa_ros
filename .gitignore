@@ -3,4 +3,3 @@ CMakeLists.txt.user
 *.pyc
 .vscode
 .DS_Store
-CLAUDE.md
