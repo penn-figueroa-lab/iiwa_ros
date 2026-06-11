@@ -32,7 +32,7 @@
   <!-- Optional UMI gripper macro -->
   <xacro:include filename="$(find iiwa_description)/urdf/robotiq_2f85_umi_gripper.xacro"/>
   <!-- Optional Xela-instrumented finger assemblies -->
-  <xacro:include filename="$(find iiwa_description)/urdf/finger_with_xela.xacro"/>
+  <xacro:include filename="$(find iiwa_description)/urdf/finger_with_xela_new.xacro"/>
 
   <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
   <xacro:arg name="robot_name" default="iiwa"/>
