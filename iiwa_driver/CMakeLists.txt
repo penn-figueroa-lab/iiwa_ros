@@ -68,7 +68,7 @@ set_property(TARGET iiwa_driver PROPERTY CXX_STANDARD 11)
 set_property(TARGET iiwa_driver PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(iiwa_driver PUBLIC include ${catkin_INCLUDE_DIRS} ${FRI_INCLUDE_DIRS})
-target_link_libraries(iiwa_driver ${catkin_LIBRARIES} ${FRI_LIBRARIES})
+target_link_libraries(iiwa_driver ${catkin_LIBRARIES} ${FRI_LIBRARIES} pthread)
 add_dependencies(iiwa_driver ${catkin_EXPORTED_TARGETS})
 
 add_dependencies(iiwa_driver iiwa_driver_generate_messages_cpp)

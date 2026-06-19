@@ -34,6 +34,9 @@
 #include <kuka/fri/ClientData.h>
 
 #include <thread>
+#include <pthread.h>
+#include <sched.h>
+#include <errno.h>
 
 namespace iiwa_ros {
     Iiwa::Iiwa(ros::NodeHandle& nh)
@@ -213,6 +216,21 @@ namespace iiwa_ros {
 
     void Iiwa::_ctrl_loop()
     {
+        // Elevate this thread to real-time FIFO scheduling so the OS cannot preempt
+        // it for longer than the FRI watchdog window (~20 ms at 500 Hz).
+        // Without this, a normal Ubuntu kernel can pause any thread for 50-200 ms,
+        // which triggers ERROR_FRI_CMD_WRONG_STATE_ACTIVE.
+        // Requires: sudo, OR add to /etc/security/limits.d/99-realtime.conf:
+        //   * - rtprio 99
+        // then log out and back in.
+        struct sched_param sp;
+        sp.sched_priority = 80;
+        if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &sp) != 0)
+            ROS_WARN("iiwa_driver: could not set SCHED_FIFO (errno %d) — "
+                     "FRI may drop under CPU load. See /etc/security/limits.d/.", errno);
+        else
+            ROS_INFO("iiwa_driver: FRI loop running at SCHED_FIFO priority 80.");
+
         static ros::Rate rate(_control_freq);
         while (ros::ok()) {
             ros::Time time = ros::Time::now();
@@ -263,7 +281,11 @@ namespace iiwa_ros {
     {
         // Read data from robot (via FRI)
         kuka::fri::ESessionState fri_state;
-        _read_fri(fri_state);
+        if (!_read_fri(fri_state)) {
+            // Socket timed out (no packet yet) — keep _idle/_commanding unchanged so
+            // _write() still sends a command and keeps the FRI session alive.
+            return;
+        }
 
         switch (fri_state) {
         case kuka::fri::MONITORING_WAIT:
@@ -379,13 +401,15 @@ namespace iiwa_ros {
         // **************************************************************************
         // Receive and decode new monitoring message
         // **************************************************************************
-        _message_size = _fri_connection.receive(_fri_message_data->receiveBuffer, kuka::fri::FRI_MONITOR_MSG_MAX_SIZE);
+        int recv_size = _fri_connection.receive(_fri_message_data->receiveBuffer, kuka::fri::FRI_MONITOR_MSG_MAX_SIZE);
 
-        if (_message_size <= 0) { // TODO: size == 0 -> connection closed (maybe go to IDLE instead of stopping?)
-            // TO-DO: Use ROS output
-            // printf("Error: failed while trying to receive monitoring message!\n");
+        if (recv_size <= 0) {
+            // Socket timeout or transient error — do NOT overwrite _message_size so
+            // _write_fri() can still encode/send with the last valid packet size,
+            // keeping the FRI session alive while we wait for the next packet.
             return false;
         }
+        _message_size = recv_size;
 
         if (!_fri_message_data->decoder.decode(_fri_message_data->receiveBuffer, _message_size)) {
             return false;

@@ -8,7 +8,7 @@ Fork of the original [epfl-lasa/iiwa_ros](https://github.com/epfl-lasa/iiwa_ros)
 
 ## Package overview
 
-`iiwa_ros` is a ROS (Noetic / catkin) metapackage. It is the **hardware and kinematics foundation** for the workspace: the driver connects to the physical robot over FRI, the Gazebo plugin provides a physics-accurate simulation, and `iiwa_tools` provides FK/IK/Jacobian used by `iiwa_interactive_controller` at 200 Hz.
+`iiwa_ros` is a ROS (Noetic / catkin) metapackage. It is the **hardware and kinematics foundation** for the workspace: the driver connects to the physical robot over FRI, the Gazebo plugin provides a physics-accurate simulation, and `iiwa_tools` provides FK/IK/Jacobian used by `iiwa_interactive_controller` at 500 Hz.
 
 ---
 
@@ -28,7 +28,7 @@ Fork of the original [epfl-lasa/iiwa_ros](https://github.com/epfl-lasa/iiwa_ros)
 
 ## iiwa_driver
 
-FRI-based `hardware_interface::RobotHW` implementation. Connects to the robot via UDP and runs the `ros_control` loop at **200 Hz**.
+FRI-based `hardware_interface::RobotHW` implementation. Connects to the robot via UDP and runs the `ros_control` loop at **500 Hz**.
 
 ### Connection parameters (`config/iiwa.yaml`)
 
@@ -39,7 +39,7 @@ fri:
   robot_description: /robot_description
 
 hardware_interface:
-  control_freq: 200   # Hz
+  control_freq: 500   # Hz
   joints: [iiwa_joint_1 ... iiwa_joint_7]
 ```
 
