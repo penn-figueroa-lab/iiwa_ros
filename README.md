@@ -17,7 +17,7 @@ Requirements
 
 iiwa_ros requires several packages to be installed in order to work properly:
 
-* [ROS] - ROS: tested in **Melodic** and **Kinetic**; *Indigo* should work also
+* [ROS] - ROS: this fork targets **Noetic**
 * [KUKA FRI] - This is a modified version of the C++ FRI library provided by KUKA: unfortunately, we cannot release this code, but if you own a KUKA manipulator please contact us in order to acquire this modified library.
 * [ROS Control]
 * [Gazebo] and gazebo-ros-pkgs
@@ -34,7 +34,7 @@ Dependencies
 
 ```sh
 cd /source/directory
-git clone https://github.com/epfl-lasa/kuka_fri.git
+git clone https://github.com/penn-figueroa-lab/kuka_fri.git
 cd kuka_fri
 ./waf configure
 ./waf
@@ -116,7 +116,7 @@ Compilation
 ```sh
 cd /path/to/ros_workspace
 # source ros workspace
-catkin_make
+catkin build
 ```
 
 Sunrise Robot Application upload
@@ -125,7 +125,7 @@ You need a specific application to run on the robot side.
 0. Make sure a Windows laptop is connected on the X66 Ethernet port and has IP `172.31.1.42` mask `255.255.0.0`
 1. Create a new Sunrise project with Sunrise Workbench and setup an empty RobotApplication template 
 2. Setup the safety configuration in `SafetyConfiguration.sconf` ([example](https://github.com/IFL-CAMP/iiwa_stack/wiki/safetyconf))
-3. Replace the empty template with the [online app](https://github.com/epfl-lasa/iiwa_ros/blob/master/iiwa_driver/java/FRIOverlay.java)
+3. Replace the empty template with the [online app](https://github.com/penn-figueroa-lab/iiwa_ros/blob/master/iiwa_driver/java/FRIOverlay.java)
 4. In `StationSetup.cat`, tab `Software`, active the FRI extension, push it to the robot with `Installation` and accept the reboot question
 5. Synchronise your new Sunrise project to the robot with icon `Synchronize project`
 6. On the Smartpad tablet, your app must be listed in [Applications] and you must also see a new [FRI] tab
