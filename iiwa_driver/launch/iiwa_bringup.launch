@@ -40,7 +40,10 @@
   </include>
 
   <!-- Spawn iiwa FRI driver -->
-  <node pkg="iiwa_driver" type="iiwa_driver" name="iiwa_driver" respawn="false" output="screen">
+  <!-- Pinned to RT_CORE (set by launch_robot.sh, which also keeps IRQs off
+       that core) so the SCHED_FIFO FRI thread doesn't share a core with
+       anything that could preempt it past the FRI watchdog window. -->
+  <node pkg="iiwa_driver" type="iiwa_driver" name="iiwa_driver" respawn="false" output="screen" launch-prefix="taskset -c $(optenv RT_CORE 15)">
     <remap from="/joint_states" to="/iiwa/joint_states"/>
     <remap from="/controller_manager" to="/iiwa/controller_manager"/>
     <remap from="/commanding_status" to="/iiwa/commanding_status"/>
