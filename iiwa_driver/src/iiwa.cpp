@@ -60,6 +60,8 @@ namespace iiwa_ros {
         _load_params(); // load parameters
         _init(); // initialize
         _commanding_status_pub = _nh.advertise<std_msgs::Bool>("commanding_status", 100);
+        // latch=true (3rd arg) — see header note.
+        _fri_state_pub = _nh.advertise<std_msgs::String>("fri_session_state", 10, true);
         _controller_manager.reset(new controller_manager::ControllerManager(this, _nh));
 
         if (_init_fri())
@@ -287,6 +289,10 @@ namespace iiwa_ros {
             return;
         }
 
+        // Poll quality/safety/drive every cycle (logs only on change) — these can shift
+        // before the session state does, which is exactly what we need to catch.
+        _check_fri_aux();
+
         switch (fri_state) {
         case kuka::fri::MONITORING_WAIT:
         case kuka::fri::MONITORING_READY:
@@ -432,6 +438,99 @@ namespace iiwa_ros {
         }
 
         return true;
+    }
+
+    const char* Iiwa::_fri_state_name(kuka::fri::ESessionState s)
+    {
+        switch (s) {
+        case kuka::fri::IDLE: return "IDLE";
+        case kuka::fri::MONITORING_WAIT: return "MONITORING_WAIT";
+        case kuka::fri::MONITORING_READY: return "MONITORING_READY";
+        case kuka::fri::COMMANDING_WAIT: return "COMMANDING_WAIT";
+        case kuka::fri::COMMANDING_ACTIVE: return "COMMANDING_ACTIVE";
+        default: return "UNKNOWN";
+        }
+    }
+
+    const char* Iiwa::_fri_quality_name(kuka::fri::EConnectionQuality q)
+    {
+        switch (q) {
+        case kuka::fri::POOR: return "POOR";
+        case kuka::fri::FAIR: return "FAIR";
+        case kuka::fri::GOOD: return "GOOD";
+        case kuka::fri::EXCELLENT: return "EXCELLENT";
+        default: return "UNKNOWN";
+        }
+    }
+
+    const char* Iiwa::_fri_safety_name(kuka::fri::ESafetyState s)
+    {
+        switch (s) {
+        case kuka::fri::NORMAL_OPERATION: return "NORMAL_OPERATION";
+        case kuka::fri::SAFETY_STOP_LEVEL_0: return "SAFETY_STOP_LEVEL_0";
+        case kuka::fri::SAFETY_STOP_LEVEL_1: return "SAFETY_STOP_LEVEL_1";
+        case kuka::fri::SAFETY_STOP_LEVEL_2: return "SAFETY_STOP_LEVEL_2";
+        default: return "UNKNOWN";
+        }
+    }
+
+    const char* Iiwa::_fri_drive_name(kuka::fri::EDriveState d)
+    {
+        switch (d) {
+        case kuka::fri::OFF: return "OFF";
+        case kuka::fri::TRANSITIONING: return "TRANSITIONING";
+        case kuka::fri::ACTIVE: return "ACTIVE";
+        default: return "UNKNOWN";
+        }
+    }
+
+    void Iiwa::_check_fri_aux()
+    {
+        // Poll the robot's own link/safety assessment; log only on change. Any of these
+        // shifting shortly BEFORE a COMMANDING_ACTIVE -> MONITORING_WAIT demotion is the
+        // signature we are hunting: quality degrading points at the link, a safety-stop
+        // level points at the cabinet's safety monitoring instead.
+        const int q = (int)_robot_state.getConnectionQuality();
+        const int s = (int)_robot_state.getSafetyState();
+        const int d = (int)_robot_state.getDriveState();
+
+        if (q != _fri_quality_prev) {
+            ROS_WARN("[FRI] connection quality %s -> %s",
+                     _fri_quality_prev < 0 ? "(init)" : _fri_quality_name((kuka::fri::EConnectionQuality)_fri_quality_prev),
+                     _fri_quality_name((kuka::fri::EConnectionQuality)q));
+            _fri_quality_prev = q;
+        }
+        if (s != _fri_safety_prev) {
+            ROS_WARN("[FRI] safety state %s -> %s",
+                     _fri_safety_prev < 0 ? "(init)" : _fri_safety_name((kuka::fri::ESafetyState)_fri_safety_prev),
+                     _fri_safety_name((kuka::fri::ESafetyState)s));
+            _fri_safety_prev = s;
+        }
+        if (d != _fri_drive_prev) {
+            ROS_WARN("[FRI] drive state %s -> %s",
+                     _fri_drive_prev < 0 ? "(init)" : _fri_drive_name((kuka::fri::EDriveState)_fri_drive_prev),
+                     _fri_drive_name((kuka::fri::EDriveState)d));
+            _fri_drive_prev = d;
+        }
+    }
+
+    void Iiwa::_on_fri_state_change(kuka::fri::ESessionState old_state, kuka::fri::ESessionState current_state)
+    {
+        // The ONLY record of how a session ended. Every FRI error path in this file is a
+        // silent `return false`, so without this a dropout and a SmartPad Stop are
+        // indistinguishable from ROS — both just go quiet.
+        // Carry the robot's own link/safety view on the transition line itself, so the fault
+        // record is self-contained and does not have to be correlated with separate log lines.
+        ROS_WARN("[FRI] session state %s -> %s  [quality=%s safety=%s drive=%s trackPerf=%.3f]",
+                 _fri_state_name(old_state), _fri_state_name(current_state),
+                 _fri_quality_name(_robot_state.getConnectionQuality()),
+                 _fri_safety_name(_robot_state.getSafetyState()),
+                 _fri_drive_name(_robot_state.getDriveState()),
+                 _robot_state.getTrackingPerformance());
+
+        std_msgs::String msg;
+        msg.data = _fri_state_name(current_state);
+        _fri_state_pub.publish(msg);
     }
 
     bool Iiwa::_write_fri()

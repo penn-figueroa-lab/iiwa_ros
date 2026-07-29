@@ -28,6 +28,7 @@
 // ROS Headers
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/String.h>
 
 #include <realtime_tools/realtime_publisher.h>
 
@@ -94,7 +95,27 @@ namespace iiwa_ros {
         bool _read_fri(kuka::fri::ESessionState& current_state);
         bool _write_fri();
         void _publish();
-        void _on_fri_state_change(kuka::fri::ESessionState old_state, kuka::fri::ESessionState current_state) {}
+        // Logs + publishes every FRI session-state transition. Added 2026-07-28 to tell a
+        // genuine dropout apart from a deliberate SmartPad Stop: both end as "robot stops
+        // sending", so the only distinguishing information is the state SEQUENCE just before
+        // the silence. The call site (_read_fri) already existed; only this body was empty.
+        // Fires only on change (a handful of times per session), so the allocation it costs
+        // does not meaningfully perturb the 500 Hz RT loop.
+        void _on_fri_state_change(kuka::fri::ESessionState old_state, kuka::fri::ESessionState current_state);
+        static const char* _fri_state_name(kuka::fri::ESessionState s);
+
+        // Added 2026-07-28. The session-state log alone could not explain WHY the session
+        // demotes: measurement showed the 500 Hz loop is flawless (2.00 ms, max 4 ms) right
+        // up to 1.4 ms before the demotion, and the NIC reports zero drops — so "our commands
+        // were late" is falsified. These are the robot's OWN views of the link and of its
+        // safety state, carried in every monitoring message and previously thrown away.
+        // Any of them may change BEFORE the session state does, so they are polled every
+        // cycle and logged on change (rare, so RT cost is negligible).
+        void _check_fri_aux();
+        static const char* _fri_quality_name(kuka::fri::EConnectionQuality q);
+        static const char* _fri_safety_name(kuka::fri::ESafetyState s);
+        static const char* _fri_drive_name(kuka::fri::EDriveState d);
+        int _fri_quality_prev{-1}, _fri_safety_prev{-1}, _fri_drive_prev{-1};
 
         // External torque publisher
         realtime_tools::RealtimePublisher<iiwa_driver::AdditionalOutputs> _additional_pub;
@@ -143,6 +164,9 @@ namespace iiwa_ros {
         std::string _robot_description;
         ros::Duration _control_period;
         ros::Publisher _commanding_status_pub;
+        // Latched: a subscriber (or rosbag) attaching mid-session still gets the current
+        // state, so the pre-silence sequence is never missing its starting point.
+        ros::Publisher _fri_state_pub;
         double _control_freq;
         bool _initialized;
     };
