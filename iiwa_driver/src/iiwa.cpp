@@ -91,6 +91,9 @@ namespace iiwa_ros {
         // Get joint names
         _num_joints = _joint_names.size();
 
+        // Unknown until the first FRI packet arrives; _read() falls back to 1/_control_freq.
+        _fri_sample_time = 0.;
+
         // Resize vectors
         _joint_position.resize(_num_joints);
         _joint_velocity.resize(_num_joints);
@@ -293,6 +296,17 @@ namespace iiwa_ros {
         // before the session state does, which is exactly what we need to catch.
         _check_fri_aux();
 
+        // The robot reports the send period the Sunrise app configured, so we never have to
+        // infer it from log-timestamp granularity or bag cadence again. Logged on change, which
+        // in practice means once per session — it also identifies WHICH app is deployed, and
+        // fingerprints which build of this driver produced a bag.
+        const double sample_time = _robot_state.getSampleTime();
+        if (sample_time > 0. && sample_time != _fri_sample_time) {
+            ROS_WARN("[FRI] send period %.3f ms (robot-reported); loop runs at %.0f Hz",
+                     sample_time * 1000., _control_freq);
+            _fri_sample_time = sample_time;
+        }
+
         switch (fri_state) {
         case kuka::fri::MONITORING_WAIT:
         case kuka::fri::MONITORING_READY:
@@ -314,9 +328,20 @@ namespace iiwa_ros {
         // Update ROS structures
         _joint_position_prev = _joint_position;
 
+        // Divide the position delta by the interval it actually spans. _joint_position_prev is
+        // only refreshed on iterations where _read_fri() succeeded (the early return above), so
+        // that interval is one FRI SEND PERIOD — not the loop period. Using 1/_control_freq here
+        // silently scaled every reported velocity by (send_period * _control_freq): correct at
+        // setSendPeriodMilliSec(2), but 2.5x too large at (5). The joint passive controller is
+        // velocity-driven, so that inflated every damping torque by the same factor.
+        // Verified 2026-08-02 on the live robot: replaying this filter against the published
+        // velocity gives a relative residual of 0.002 at dt = 5 ms vs 1.500 assuming 2 ms, on all
+        // seven joints — and 1.500 is exactly the |2.5 - 1| the bug predicts.
+        const double dt = (_fri_sample_time > 0.) ? _fri_sample_time : elapsed_time.toSec();
+
         for (int i = 0; i < _num_joints; i++) {
             _joint_position[i] = _robot_state.getMeasuredJointPosition()[i];
-            _joint_velocity[i] = filters::exponentialSmoothing((_joint_position[i] - _joint_position_prev[i]) / elapsed_time.toSec(), _joint_velocity[i], 0.2);
+            _joint_velocity[i] = filters::exponentialSmoothing((_joint_position[i] - _joint_position_prev[i]) / dt, _joint_velocity[i], 0.2);
             _joint_effort[i] = _robot_state.getMeasuredTorque()[i];
         }
     }

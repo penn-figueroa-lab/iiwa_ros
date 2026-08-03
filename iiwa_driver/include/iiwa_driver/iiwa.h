@@ -168,6 +168,11 @@ namespace iiwa_ros {
         // state, so the pre-silence sequence is never missing its starting point.
         ros::Publisher _fri_state_pub;
         double _control_freq;
+        // Robot-reported FRI send period (s), from LBRState::getSampleTime(). This is the true
+        // interval between two consecutive position samples and is what the joint-velocity
+        // finite difference must be divided by — NOT 1/_control_freq, which is only equal to it
+        // when the Sunrise app happens to use setSendPeriodMilliSec(2). 0 until the first packet.
+        double _fri_sample_time;
         bool _initialized;
     };
 } // namespace iiwa_ros
