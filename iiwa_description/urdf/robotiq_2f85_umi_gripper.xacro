@@ -6,7 +6,7 @@
     to an existing iiwa model.
 
     Source subtree extracted from:
-      assistive_robot_grasp/agents/iiwa14_gripper_umi.urdf
+      reach_grasp_assist/agents/iiwa14_gripper_umi.urdf
 
     Notes:
       - This macro only adds the gripper links/joints (and the mimic joints).
