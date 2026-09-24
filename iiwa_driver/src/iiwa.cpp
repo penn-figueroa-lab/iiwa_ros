@@ -334,9 +334,6 @@ namespace iiwa_ros {
         // silently scaled every reported velocity by (send_period * _control_freq): correct at
         // setSendPeriodMilliSec(2), but 2.5x too large at (5). The joint passive controller is
         // velocity-driven, so that inflated every damping torque by the same factor.
-        // Verified 2026-08-02 on the live robot: replaying this filter against the published
-        // velocity gives a relative residual of 0.002 at dt = 5 ms vs 1.500 assuming 2 ms, on all
-        // seven joints — and 1.500 is exactly the |2.5 - 1| the bug predicts.
         const double dt = (_fri_sample_time > 0.) ? _fri_sample_time : elapsed_time.toSec();
 
         for (int i = 0; i < _num_joints; i++) {

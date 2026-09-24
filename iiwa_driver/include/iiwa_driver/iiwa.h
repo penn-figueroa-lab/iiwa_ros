@@ -95,22 +95,17 @@ namespace iiwa_ros {
         bool _read_fri(kuka::fri::ESessionState& current_state);
         bool _write_fri();
         void _publish();
-        // Logs + publishes every FRI session-state transition. Added 2026-07-28 to tell a
-        // genuine dropout apart from a deliberate SmartPad Stop: both end as "robot stops
-        // sending", so the only distinguishing information is the state SEQUENCE just before
-        // the silence. The call site (_read_fri) already existed; only this body was empty.
-        // Fires only on change (a handful of times per session), so the allocation it costs
-        // does not meaningfully perturb the 500 Hz RT loop.
+        // Logs + publishes every FRI session-state transition. A genuine dropout and a
+        // deliberate SmartPad Stop both end as "robot stops sending", so the state SEQUENCE
+        // just before the silence is the only thing that separates them. Fires only on change
+        // (a handful of times per session), so its cost does not perturb the 500 Hz RT loop.
         void _on_fri_state_change(kuka::fri::ESessionState old_state, kuka::fri::ESessionState current_state);
         static const char* _fri_state_name(kuka::fri::ESessionState s);
 
-        // Added 2026-07-28. The session-state log alone could not explain WHY the session
-        // demotes: measurement showed the 500 Hz loop is flawless (2.00 ms, max 4 ms) right
-        // up to 1.4 ms before the demotion, and the NIC reports zero drops — so "our commands
-        // were late" is falsified. These are the robot's OWN views of the link and of its
-        // safety state, carried in every monitoring message and previously thrown away.
-        // Any of them may change BEFORE the session state does, so they are polled every
-        // cycle and logged on change (rare, so RT cost is negligible).
+        // The robot's OWN views of the link and of its safety state, carried in every
+        // monitoring message and otherwise discarded. The session-state log alone cannot
+        // explain WHY a session demotes; any of these may change BEFORE the session state
+        // does, so they are polled every cycle and logged on change (rare, negligible cost).
         void _check_fri_aux();
         static const char* _fri_quality_name(kuka::fri::EConnectionQuality q);
         static const char* _fri_safety_name(kuka::fri::ESafetyState s);
