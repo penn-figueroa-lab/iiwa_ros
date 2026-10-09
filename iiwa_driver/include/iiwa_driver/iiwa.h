@@ -35,6 +35,14 @@
 #include <iiwa_driver/AdditionalOutputs.h>
 #include <std_msgs/Float64MultiArray.h>
 
+#include <dynamic_reconfigure/server.h>
+#include <iiwa_driver/DitherConfig.h>
+
+#include <atomic>
+#include <chrono>
+#include <cmath>
+#include <memory>
+
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
 #include <hardware_interface/robot_hw.h>
@@ -169,6 +177,22 @@ namespace iiwa_ros {
         // when the Sunrise app happens to use setSendPeriodMilliSec(2). 0 until the first packet.
         double _fri_sample_time;
         bool _initialized;
+
+        // Torque-mode position dither (upstream e293093). The commanded position is otherwise the
+        // measured one, and KUKA disables its friction compensation when the robot sits at the
+        // commanded position. Set live from /iiwa_driver/dither (spinner thread); read by _write().
+        void _dither_cb(iiwa_driver::DitherConfig& config, uint32_t level);
+        bool _update_dither(); // fills _dither_cmd; false = send the measured position
+        std::shared_ptr<dynamic_reconfigure::Server<iiwa_driver::DitherConfig>> _dither_server;
+        std::atomic<bool> _dither_enable{false};
+        std::atomic<double> _dither_amplitude{0.}, _dither_period{6.283}, _dither_ramp{2.}, _dither_margin{0.035};
+        double _dither_envelope{0.}, _dither_phase{0.};
+        double _dither_last_t{-1.};
+        bool _dither_logged_on{false};
+        // URDF position limits per joint; the dithered command is clamped inside them.
+        std::vector<double> _pos_lower, _pos_upper;
+        std::vector<bool> _has_pos_limits;
+        std::vector<double> _dither_cmd;
     };
 } // namespace iiwa_ros
 

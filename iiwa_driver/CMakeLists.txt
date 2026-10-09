@@ -41,6 +41,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   urdf
   realtime_tools
+  dynamic_reconfigure
 )
 
 find_package(FRI REQUIRED COMPONENTS
@@ -58,8 +59,11 @@ generate_messages(
   std_msgs
 )
 
+# Torque-mode position dither, /iiwa_driver/dither
+generate_dynamic_reconfigure_options(cfg/Dither.cfg)
+
 # Needed for ros packages
-catkin_package(CATKIN_DEPENDS roscpp message_runtime geometry_msgs tf std_msgs sensor_msgs hardware_interface controller_manager urdf realtime_tools)
+catkin_package(CATKIN_DEPENDS roscpp message_runtime geometry_msgs tf std_msgs sensor_msgs hardware_interface controller_manager urdf realtime_tools dynamic_reconfigure)
 
 add_executable(iiwa_driver src/iiwa.cpp src/iiwa_driver.cpp)
 
@@ -69,7 +73,7 @@ set_property(TARGET iiwa_driver PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_include_directories(iiwa_driver PUBLIC include ${catkin_INCLUDE_DIRS} ${FRI_INCLUDE_DIRS})
 target_link_libraries(iiwa_driver ${catkin_LIBRARIES} ${FRI_LIBRARIES} pthread)
-add_dependencies(iiwa_driver ${catkin_EXPORTED_TARGETS})
+add_dependencies(iiwa_driver ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 add_dependencies(iiwa_driver iiwa_driver_generate_messages_cpp)
 

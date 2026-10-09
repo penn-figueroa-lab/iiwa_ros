@@ -59,6 +59,9 @@ namespace iiwa_ros {
         _nh = nh;
         _load_params(); // load parameters
         _init(); // initialize
+        // Default OFF; the first callback applies the .cfg defaults. Private ns -> /iiwa_driver/dither.
+        _dither_server.reset(new dynamic_reconfigure::Server<iiwa_driver::DitherConfig>(ros::NodeHandle("~dither")));
+        _dither_server->setCallback([this](iiwa_driver::DitherConfig& c, uint32_t l) { _dither_cb(c, l); });
         _commanding_status_pub = _nh.advertise<std_msgs::Bool>("commanding_status", 100);
         // latch=true (3rd arg) — see header note.
         _fri_state_pub = _nh.advertise<std_msgs::String>("fri_session_state", 10, true);
@@ -101,6 +104,10 @@ namespace iiwa_ros {
         _joint_position_command.resize(_num_joints);
         _joint_velocity_command.resize(_num_joints);
         _joint_effort_command.resize(_num_joints);
+        _dither_cmd.resize(_num_joints);
+        _pos_lower.assign(_num_joints, 0.);
+        _pos_upper.assign(_num_joints, 0.);
+        _has_pos_limits.assign(_num_joints, false);
 
         // Get the URDF XML from the parameter server
         urdf::Model urdf_model;
@@ -143,6 +150,11 @@ namespace iiwa_ros {
                 }
 
                 getJointLimits(urdf_joint, limits);
+                if (limits.has_position_limits) {
+                    _pos_lower[i] = limits.min_position;
+                    _pos_upper[i] = limits.max_position;
+                    _has_pos_limits[i] = true;
+                }
                 if (getSoftJointLimits(urdf_joint, soft_limits))
                     has_soft_limits = true;
             }
@@ -370,13 +382,76 @@ namespace iiwa_ros {
 
         if (_robot_state.getClientCommandMode() == kuka::fri::TORQUE) {
             _robot_command.setTorque(_joint_effort_command.data());
-            _robot_command.setJointPosition(_joint_position.data());
+            // Commanded = measured unless the dither is fading in, on, or fading out. With it
+            // off this is the exact pre-dither behaviour.
+            if (_update_dither())
+                _robot_command.setJointPosition(_dither_cmd.data());
+            else
+                _robot_command.setJointPosition(_joint_position.data());
         }
         else if (_robot_state.getClientCommandMode() == kuka::fri::POSITION)
             _robot_command.setJointPosition(_joint_position_command.data());
         // else ERROR
 
         _write_fri();
+    }
+
+    void Iiwa::_dither_cb(iiwa_driver::DitherConfig& config, uint32_t /*level*/)
+    {
+        _dither_amplitude = config.amplitude;
+        _dither_period = config.period_s;
+        _dither_ramp = config.ramp_s;
+        _dither_margin = config.limit_margin;
+        _dither_enable = config.enable;
+        if (config.enable)
+            ROS_WARN("[dither] ON: %.3f rad, %.2f s period, %.1f s ramp, %.3f rad limit margin "
+                     "-- SAFE ONLY WITH SmartPad stiffness 0",
+                config.amplitude, config.period_s, config.ramp_s, config.limit_margin);
+        else
+            ROS_INFO("[dither] OFF (fading out over %.1f s)", config.ramp_s);
+    }
+
+    bool Iiwa::_update_dither()
+    {
+        const double now = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        // Capped so a stalled loop cannot jump the envelope or the phase.
+        const double dt = (_dither_last_t < 0.) ? 0. : std::min(now - _dither_last_t, 0.02);
+        _dither_last_t = now;
+
+        // The envelope slews to its target at amplitude/ramp_s, so enabling, disabling or
+        // retuning never steps the commanded position.
+        const double amp = _dither_amplitude;
+        const double target = _dither_enable ? amp : 0.;
+        const double step = std::max(amp, 0.01) * dt / std::max(_dither_ramp.load(), 1e-3);
+        if (_dither_envelope < target)
+            _dither_envelope = std::min(_dither_envelope + step, target);
+        else
+            _dither_envelope = std::max(_dither_envelope - step, target);
+
+        if (_dither_envelope <= 0.) {
+            _dither_envelope = 0.;
+            _dither_phase = 0.; // the next fade-in starts from sin(0)
+            if (_dither_logged_on) {
+                ROS_INFO("[dither] inactive: commanded position = measured");
+                _dither_logged_on = false;
+            }
+            return false;
+        }
+        if (!_dither_logged_on) {
+            ROS_WARN("[dither] active: commanded position = measured + envelope * sin(phase)");
+            _dither_logged_on = true;
+        }
+
+        _dither_phase = std::fmod(_dither_phase + 2. * M_PI * dt / std::max(_dither_period.load(), 1e-3), 2. * M_PI);
+        const double offset = _dither_envelope * std::sin(_dither_phase);
+        const double margin = _dither_margin;
+        for (int i = 0; i < _num_joints; i++) {
+            double c = _joint_position[i] + offset;
+            if (_has_pos_limits[i] && _pos_lower[i] + margin < _pos_upper[i] - margin)
+                c = std::min(std::max(c, _pos_lower[i] + margin), _pos_upper[i] - margin);
+            _dither_cmd[i] = c;
+        }
+        return true;
     }
 
     bool Iiwa::_init_fri()
