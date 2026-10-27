@@ -43,6 +43,12 @@
   <xacro:arg name="with_gripper" default="true"/>
   <!-- Toggle to attach Xela finger assemblies (requires with_gripper:=true) -->
   <xacro:arg name="with_fingers" default="true"/>
+  <!-- Bota SensONE wrist F/T sensor between the flange and the gripper; false = no sensor -->
+  <xacro:arg name="use_ft_sensor" default="true"/>
+  <!-- = ${prefix}_mounting_to_wrench z in BFT_SENS_ECAT_M8.urdf.xacro; parsed as a plain literal by reach_grasp_assist config/_urdf_lookup.py -->
+  <xacro:property name="ft_sensor_height" value="0.035"/>
+  <xacro:if     value="$(arg use_ft_sensor)"><xacro:property name="tool_offset" value="${ft_sensor_height}"/><xacro:property name="gripper_parent" value="ft_sensor_wrench"/></xacro:if>
+  <xacro:unless value="$(arg use_ft_sensor)"><xacro:property name="tool_offset" value="0"/><xacro:property name="gripper_parent" value="$(arg robot_name)_link_ee"/></xacro:unless>
 
   <!-- collision shapes -->
   <xacro:if value="$(arg simple_collision)">
@@ -56,13 +62,24 @@
   <link name="world"/>
 
   <!--iiwa-->
-  <xacro:iiwa14 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="world" collision_postfix="$(arg collision_postfix)">
+  <xacro:iiwa14 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="world" collision_postfix="$(arg collision_postfix)" tool_offset="${tool_offset}">
     <origin xyz="$(arg origin_xyz)" rpy="$(arg origin_rpy)" />
   </xacro:iiwa14>
 
+  <!-- Optional wrist F/T sensor; the include sits inside the if so use_ft_sensor:=false never touches the file -->
+  <xacro:if value="$(arg use_ft_sensor)">
+    <xacro:include filename="$(find iiwa_description)/urdf/BFT_SENS_ECAT_M8.urdf.xacro"/>
+    <xacro:BFT_SENS_ECAT_M8 prefix="ft_sensor"/>
+    <joint name="$(arg robot_name)_ft_sensor_joint" type="fixed">
+      <parent link="$(arg robot_name)_link_ee"/>
+      <child link="ft_sensor_mounting"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+  </xacro:if>
+
   <!-- Optional gripper attachment -->
   <xacro:if value="$(arg with_gripper)">
-    <xacro:robotiq_2f85_umi_gripper parent="$(arg robot_name)_link_ee" robot_name="$(arg robot_name)"/>
+    <xacro:robotiq_2f85_umi_gripper parent="${gripper_parent}" robot_name="$(arg robot_name)"/>
 
     <!-- Optional Xela finger assemblies (left + right) -->
     <xacro:if value="$(arg with_fingers)">

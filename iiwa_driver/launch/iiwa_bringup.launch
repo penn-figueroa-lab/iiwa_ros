@@ -28,6 +28,8 @@
   <!-- Select the robot -->
   <arg name="robot_name" default="iiwa"/>
   <arg name="model" default="14" />
+  <!-- Bota wrist F/T sensor in the description; default from env USE_FT_SENSOR, set by the launch scripts -->
+  <arg name="use_ft_sensor" default="$(optenv USE_FT_SENSOR true)"/>
 
   <!-- Select the controller -->
   <arg name="controller" default="TorqueController"/>
@@ -37,6 +39,7 @@
       <arg name="robot_name" value="$(arg robot_name)"/>
       <arg name="model" value="$(arg model)"/>
       <arg name="controller" value="$(arg controller)"/>
+      <arg name="use_ft_sensor" value="$(arg use_ft_sensor)"/>
   </include>
 
   <!-- Spawn iiwa FRI driver -->

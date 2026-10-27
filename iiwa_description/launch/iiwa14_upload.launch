@@ -29,9 +29,12 @@
    <!-- This lauch file just loads the URDF with the given hardware interface and robot name into the ROS Parameter Server -->
   <arg name="hardware_interface" default="EffortJointInterface"/>
   <arg name="robot_name" default="iiwa"/>
+  <!-- Bota wrist F/T sensor in the description; default from env USE_FT_SENSOR, set by the launch scripts -->
+  <arg name="use_ft_sensor" default="$(optenv USE_FT_SENSOR true)"/>
 
   <param name="robot_description"
       command="$(find xacro)/xacro --inorder '$(find iiwa_description)/urdf/iiwa14.urdf.xacro'
       hardware_interface:=$(arg hardware_interface)
-      robot_name:=$(arg robot_name)" />
+      robot_name:=$(arg robot_name)
+      use_ft_sensor:=$(arg use_ft_sensor)" />
 </launch>
