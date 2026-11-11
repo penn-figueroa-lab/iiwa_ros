@@ -24,6 +24,8 @@
 //|
 #include <iiwa_driver/iiwa.h>
 
+#include <algorithm>
+
 // ROS Headers
 #include <control_toolbox/filters.h>
 #include <controller_manager/controller_manager.h>
@@ -62,6 +64,11 @@ namespace iiwa_ros {
         // Default OFF; the first callback applies the .cfg defaults. Private ns -> /iiwa_driver/dither.
         _dither_server.reset(new dynamic_reconfigure::Server<iiwa_driver::DitherConfig>(ros::NodeHandle("~dither")));
         _dither_server->setCallback([this](iiwa_driver::DitherConfig& c, uint32_t l) { _dither_cb(c, l); });
+        _tuning_server.reset(new dynamic_reconfigure::Server<iiwa_driver::DriverTuningConfig>(ros::NodeHandle("~tuning")));
+        _tuning_server->setCallback([this](iiwa_driver::DriverTuningConfig& c, uint32_t l) { _tuning_cb(c, l); });
+        // Same topic the TorqueController reads (resolved in _nh, like the controller manager).
+        _effort_cmd_sub = _nh.subscribe<std_msgs::Float64MultiArray>("TorqueController/command", 1,
+            &Iiwa::_effort_cmd_cb, this, ros::TransportHints().tcpNoDelay());
         _commanding_status_pub = _nh.advertise<std_msgs::Bool>("commanding_status", 100);
         // latch=true (3rd arg) — see header note.
         _fri_state_pub = _nh.advertise<std_msgs::String>("fri_session_state", 10, true);
@@ -350,7 +357,7 @@ namespace iiwa_ros {
 
         for (int i = 0; i < _num_joints; i++) {
             _joint_position[i] = _robot_state.getMeasuredJointPosition()[i];
-            _joint_velocity[i] = filters::exponentialSmoothing((_joint_position[i] - _joint_position_prev[i]) / dt, _joint_velocity[i], 0.2);
+            _joint_velocity[i] = filters::exponentialSmoothing((_joint_position[i] - _joint_position_prev[i]) / dt, _joint_velocity[i], _velocity_alpha.load());
             _joint_effort[i] = _robot_state.getMeasuredTorque()[i];
         }
     }
@@ -381,6 +388,18 @@ namespace iiwa_ros {
         _fri_message_data->resetCommandMessage();
 
         if (_robot_state.getClientCommandMode() == kuka::fri::TORQUE) {
+            const double t_cmd = _effort_cmd_last_t.load(), timeout = _effort_cmd_timeout.load();
+            const double age = (t_cmd < 0.) ? 0. : _steady_now() - t_cmd;
+            if (timeout > 0. && t_cmd >= 0. && age > timeout) {
+                std::fill(_joint_effort_command.begin(), _joint_effort_command.end(), 0.);
+                if (!_effort_cmd_stale_logged)
+                    ROS_ERROR("[watchdog] TorqueController/command is %.3f s old (> %.3f s): torque ZEROED", age, timeout);
+                _effort_cmd_stale_logged = true;
+            }
+            else if (_effort_cmd_stale_logged && age <= timeout) {
+                ROS_WARN("[watchdog] TorqueController/command resumed: torque passed through");
+                _effort_cmd_stale_logged = false;
+            }
             _robot_command.setTorque(_joint_effort_command.data());
             // Commanded = measured unless the dither is fading in, on, or fading out. With it
             // off this is the exact pre-dither behaviour.
@@ -394,6 +413,24 @@ namespace iiwa_ros {
         // else ERROR
 
         _write_fri();
+    }
+
+    double Iiwa::_steady_now()
+    {
+        return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
+
+    void Iiwa::_effort_cmd_cb(const std_msgs::Float64MultiArray::ConstPtr& /*msg*/)
+    {
+        _effort_cmd_last_t = _steady_now();
+    }
+
+    void Iiwa::_tuning_cb(iiwa_driver::DriverTuningConfig& config, uint32_t /*level*/)
+    {
+        _velocity_alpha = config.velocity_alpha;
+        _effort_cmd_timeout = config.effort_cmd_timeout_s;
+        ROS_INFO("[tuning] velocity_alpha %.3f, effort_cmd_timeout_s %.3f%s", config.velocity_alpha,
+            config.effort_cmd_timeout_s, config.effort_cmd_timeout_s > 0. ? "" : " (watchdog OFF)");
     }
 
     void Iiwa::_dither_cb(iiwa_driver::DitherConfig& config, uint32_t /*level*/)

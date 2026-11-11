@@ -37,6 +37,7 @@
 
 #include <dynamic_reconfigure/server.h>
 #include <iiwa_driver/DitherConfig.h>
+#include <iiwa_driver/DriverTuningConfig.h>
 
 #include <atomic>
 #include <chrono>
@@ -193,6 +194,20 @@ namespace iiwa_ros {
         std::vector<double> _pos_lower, _pos_upper;
         std::vector<bool> _has_pos_limits;
         std::vector<double> _dither_cmd;
+
+        // Live knobs at /iiwa_driver/tuning, set from the spinner thread.
+        // _velocity_alpha: EMA weight of the new velocity sample (0.2 = the former hard-coded value).
+        // Watchdog: ros_control's JointGroupEffortController repeats its last command forever, so a
+        // killed LLC would leave its last torque on the arm. _write() zeroes the torque once the
+        // command topic is older than _effort_cmd_timeout; armed by the first message, 0 = off.
+        void _tuning_cb(iiwa_driver::DriverTuningConfig& config, uint32_t level);
+        void _effort_cmd_cb(const std_msgs::Float64MultiArray::ConstPtr& msg);
+        static double _steady_now();
+        std::shared_ptr<dynamic_reconfigure::Server<iiwa_driver::DriverTuningConfig>> _tuning_server;
+        std::atomic<double> _velocity_alpha{0.2}, _effort_cmd_timeout{0.25};
+        std::atomic<double> _effort_cmd_last_t{-1.}; // steady-clock s; < 0 = no command yet
+        ros::Subscriber _effort_cmd_sub;
+        bool _effort_cmd_stale_logged{false};
     };
 } // namespace iiwa_ros
 

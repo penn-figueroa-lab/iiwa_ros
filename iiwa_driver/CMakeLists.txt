@@ -60,7 +60,8 @@ generate_messages(
 )
 
 # Torque-mode position dither, /iiwa_driver/dither
-generate_dynamic_reconfigure_options(cfg/Dither.cfg)
+# + live velocity filter / effort-command watchdog, /iiwa_driver/tuning
+generate_dynamic_reconfigure_options(cfg/Dither.cfg cfg/DriverTuning.cfg)
 
 # Needed for ros packages
 catkin_package(CATKIN_DEPENDS roscpp message_runtime geometry_msgs tf std_msgs sensor_msgs hardware_interface controller_manager urdf realtime_tools dynamic_reconfigure)
