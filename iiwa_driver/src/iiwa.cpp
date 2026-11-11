@@ -66,9 +66,12 @@ namespace iiwa_ros {
         _dither_server->setCallback([this](iiwa_driver::DitherConfig& c, uint32_t l) { _dither_cb(c, l); });
         _tuning_server.reset(new dynamic_reconfigure::Server<iiwa_driver::DriverTuningConfig>(ros::NodeHandle("~tuning")));
         _tuning_server->setCallback([this](iiwa_driver::DriverTuningConfig& c, uint32_t l) { _tuning_cb(c, l); });
-        // Same topic the TorqueController reads (resolved in _nh, like the controller manager).
-        _effort_cmd_sub = _nh.subscribe<std_msgs::Float64MultiArray>("TorqueController/command", 1,
+        // The topic the effort controller reads. Absolute (see the header): the launch file passes
+        // /iiwa/<controller>/command, matching the spawner's /iiwa/<controller>.
+        ros::NodeHandle("~").param<std::string>("effort_cmd_topic", _effort_cmd_topic, "/iiwa/TorqueController/command");
+        _effort_cmd_sub = _nh.subscribe<std_msgs::Float64MultiArray>(_effort_cmd_topic, 1,
             &Iiwa::_effort_cmd_cb, this, ros::TransportHints().tcpNoDelay());
+        ROS_INFO("[watchdog] watching %s", _effort_cmd_sub.getTopic().c_str());
         _commanding_status_pub = _nh.advertise<std_msgs::Bool>("commanding_status", 100);
         // latch=true (3rd arg) — see header note.
         _fri_state_pub = _nh.advertise<std_msgs::String>("fri_session_state", 10, true);
@@ -389,7 +392,13 @@ namespace iiwa_ros {
 
         if (_robot_state.getClientCommandMode() == kuka::fri::TORQUE) {
             const double t_cmd = _effort_cmd_last_t.load(), timeout = _effort_cmd_timeout.load();
-            const double age = (t_cmd < 0.) ? 0. : _steady_now() - t_cmd;
+            const double now = _steady_now();
+            const double age = (t_cmd < 0.) ? 0. : now - t_cmd;
+            if (_torque_mode_since < 0.) _torque_mode_since = now;
+            if (t_cmd < 0. && timeout > 0. && !_effort_cmd_unarmed_logged && now - _torque_mode_since > 5.) {
+                ROS_WARN("[watchdog] NOT ARMED: no message on %s after 5 s in torque mode", _effort_cmd_sub.getTopic().c_str());
+                _effort_cmd_unarmed_logged = true;
+            }
             if (timeout > 0. && t_cmd >= 0. && age > timeout) {
                 std::fill(_joint_effort_command.begin(), _joint_effort_command.end(), 0.);
                 if (!_effort_cmd_stale_logged)

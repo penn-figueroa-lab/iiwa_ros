@@ -200,6 +200,9 @@ namespace iiwa_ros {
         // Watchdog: ros_control's JointGroupEffortController repeats its last command forever, so a
         // killed LLC would leave its last torque on the arm. _write() zeroes the torque once the
         // command topic is older than _effort_cmd_timeout; armed by the first message, 0 = off.
+        // The topic is ~effort_cmd_topic, an ABSOLUTE name: this node runs in the root namespace
+        // while the spawner loads the controller under /iiwa, so a relative name never matches.
+        // An unarmed watchdog is silent, so _write() warns once if torque mode runs 5 s with no command.
         void _tuning_cb(iiwa_driver::DriverTuningConfig& config, uint32_t level);
         void _effort_cmd_cb(const std_msgs::Float64MultiArray::ConstPtr& msg);
         static double _steady_now();
@@ -207,7 +210,10 @@ namespace iiwa_ros {
         std::atomic<double> _velocity_alpha{0.2}, _effort_cmd_timeout{0.25};
         std::atomic<double> _effort_cmd_last_t{-1.}; // steady-clock s; < 0 = no command yet
         ros::Subscriber _effort_cmd_sub;
+        std::string _effort_cmd_topic;
         bool _effort_cmd_stale_logged{false};
+        double _torque_mode_since{-1.};              // steady-clock s of the first torque-mode write
+        bool _effort_cmd_unarmed_logged{false};
     };
 } // namespace iiwa_ros
 

@@ -50,6 +50,8 @@
     <remap from="/joint_states" to="/iiwa/joint_states"/>
     <remap from="/controller_manager" to="/iiwa/controller_manager"/>
     <remap from="/commanding_status" to="/iiwa/commanding_status"/>
+    <!-- Effort-command watchdog topic: the controller iiwa_control.launch spawns as /iiwa/$(arg controller) -->
+    <param name="effort_cmd_topic" value="/iiwa/$(arg controller)/command"/>
     <!-- Load configurations from YAML file to parameter server -->
     <rosparam file="$(find iiwa_driver)/config/iiwa.yaml" command="load"/>
   </node>
