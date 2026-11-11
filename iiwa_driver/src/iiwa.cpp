@@ -399,15 +399,15 @@ namespace iiwa_ros {
                 ROS_WARN("[watchdog] NOT ARMED: no message on %s after 5 s in torque mode", _effort_cmd_sub.getTopic().c_str());
                 _effort_cmd_unarmed_logged = true;
             }
-            if (timeout > 0. && t_cmd >= 0. && age > timeout) {
+            // Stale command: zero torque alone leaves the arm on gravity compensation with no damping,
+            // so any unmodelled load accelerates it. Instead stop answering FRI packets: the robot
+            // drops the session, the Sunrise app ends and the joints lock. Latched until restart.
+            if (timeout > 0. && t_cmd >= 0. && age > timeout && !_fri_abort) {
                 std::fill(_joint_effort_command.begin(), _joint_effort_command.end(), 0.);
-                if (!_effort_cmd_stale_logged)
-                    ROS_ERROR("[watchdog] TorqueController/command is %.3f s old (> %.3f s): torque ZEROED", age, timeout);
-                _effort_cmd_stale_logged = true;
-            }
-            else if (_effort_cmd_stale_logged && age <= timeout) {
-                ROS_WARN("[watchdog] TorqueController/command resumed: torque passed through");
-                _effort_cmd_stale_logged = false;
+                ROS_ERROR("[watchdog] %s is %.3f s old (> %.3f s): FRI replies STOPPED, the robot will end the "
+                          "session and lock the joints. Restart the Sunrise app and the driver.",
+                          _effort_cmd_sub.getTopic().c_str(), age, timeout);
+                _fri_abort = true;
             }
             _robot_command.setTorque(_joint_effort_command.data());
             // Commanded = measured unless the dither is fading in, on, or fading out. With it
@@ -421,7 +421,8 @@ namespace iiwa_ros {
             _robot_command.setJointPosition(_joint_position_command.data());
         // else ERROR
 
-        _write_fri();
+        if (!_fri_abort)
+            _write_fri();
     }
 
     double Iiwa::_steady_now()

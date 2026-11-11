@@ -198,8 +198,9 @@ namespace iiwa_ros {
         // Live knobs at /iiwa_driver/tuning, set from the spinner thread.
         // _velocity_alpha: EMA weight of the new velocity sample (0.2 = the former hard-coded value).
         // Watchdog: ros_control's JointGroupEffortController repeats its last command forever, so a
-        // killed LLC would leave its last torque on the arm. _write() zeroes the torque once the
-        // command topic is older than _effort_cmd_timeout; armed by the first message, 0 = off.
+        // killed LLC would leave its last torque on the arm. Once the command topic is older than
+        // _effort_cmd_timeout, _write() stops sending FRI replies (_fri_abort, latched) so the robot
+        // ends the session and locks the joints; armed by the first message, 0 = off.
         // The topic is ~effort_cmd_topic, an ABSOLUTE name: this node runs in the root namespace
         // while the spawner loads the controller under /iiwa, so a relative name never matches.
         // An unarmed watchdog is silent, so _write() warns once if torque mode runs 5 s with no command.
@@ -211,7 +212,7 @@ namespace iiwa_ros {
         std::atomic<double> _effort_cmd_last_t{-1.}; // steady-clock s; < 0 = no command yet
         ros::Subscriber _effort_cmd_sub;
         std::string _effort_cmd_topic;
-        bool _effort_cmd_stale_logged{false};
+        bool _fri_abort{false};                      // set by the watchdog; no FRI reply is sent after it
         double _torque_mode_since{-1.};              // steady-clock s of the first torque-mode write
         bool _effort_cmd_unarmed_logged{false};
     };
