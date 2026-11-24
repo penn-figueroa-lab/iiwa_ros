@@ -186,6 +186,8 @@ namespace iiwa_ros {
         double _state_t{-1.};          // steady-clock s of the last valid state
         double _robot_stamp_prev{0.};  // robot timestamp of that state [s]
         unsigned long _lost_packets{0}; // since driver start, counted from the robot timestamps
+        int _stamp_check_n{-1};         // packets into the per-session timestamp-step check; -1 = done
+        double _stamp_check_t0{0.}, _stamp_step_min{0.}, _stamp_step_max{0.};
 
         // Torque-mode position dither (upstream e293093). The commanded position is otherwise the
         // measured one, and KUKA disables its friction compensation when the robot sits at the

@@ -377,6 +377,23 @@ namespace iiwa_ros {
                 ROS_WARN_THROTTLE(1.0, "[FRI] %.0f packet(s) lost before this one (%lu since start)", r - 1., _lost_packets);
             }
         }
+        // Once per session, the robot timestamp step over 200 packets: the loss count above needs it to be one send
+        // period. min = max = period confirms it; 0 means no timestamp (n stays 1), a spread means coarse resolution.
+        if (_velocity_seed) {
+            _stamp_check_n = 0;
+            _stamp_check_t0 = stamp;
+            _stamp_step_min = 1e9;
+            _stamp_step_max = -1e9;
+        }
+        else if (_stamp_check_n >= 0) {
+            _stamp_step_min = std::min(_stamp_step_min, stamp - _robot_stamp_prev);
+            _stamp_step_max = std::max(_stamp_step_max, stamp - _robot_stamp_prev);
+            if (++_stamp_check_n == 200) {
+                ROS_WARN("[FRI] robot timestamp step over 200 packets: min %.3f, mean %.3f, max %.3f ms (send period %.3f ms)",
+                         _stamp_step_min * 1e3, (stamp - _stamp_check_t0) / 200. * 1e3, _stamp_step_max * 1e3, period * 1e3);
+                _stamp_check_n = -1;
+            }
+        }
         _robot_stamp_prev = stamp;
 
         // Update ROS structures. On a seeding packet (the first, or the first after a silence) the only
