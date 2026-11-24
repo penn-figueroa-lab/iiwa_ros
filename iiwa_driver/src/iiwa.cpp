@@ -25,6 +25,7 @@
 #include <iiwa_driver/iiwa.h>
 
 #include <algorithm>
+#include <cmath>
 
 // ROS Headers
 #include <control_toolbox/filters.h>
@@ -41,6 +42,10 @@
 #include <errno.h>
 
 namespace iiwa_ros {
+    // No valid robot state for this long [s] = the session is gone (IDLE, a drop, the app ended), not a
+    // lost packet: 10 send periods at 5 ms, so a few lost packets never zero the velocity mid-motion.
+    static constexpr double kStateSilenceS = 0.05;
+
     Iiwa::Iiwa(ros::NodeHandle& nh)
     {
         init(nh);
@@ -266,6 +271,13 @@ namespace iiwa_ros {
             auto elapsed_time = ros::Duration(1. / _control_freq);
 
             _read(elapsed_time);
+            // No robot state before the first packet: updating would publish the init zeros as
+            // /iiwa/joint_states. The spawner's start request waits, so controllers start at that packet.
+            if (!_have_state) {
+                _publish();
+                rate.sleep();
+                continue;
+            }
             _controller_manager->update(ros::Time::now(), elapsed_time);
             _write(elapsed_time);
 
@@ -311,6 +323,7 @@ namespace iiwa_ros {
         if (!_read_fri(fri_state)) {
             // Socket timed out (no packet yet) — keep _idle/_commanding unchanged so
             // _write() still sends a command and keeps the FRI session alive.
+            _check_state_silence();
             return;
         }
 
@@ -344,24 +357,52 @@ namespace iiwa_ros {
         default:
             _idle = true;
             _commanding = false;
+            _check_state_silence();
             return;
         }
 
-        // Update ROS structures
+        // Divide the position delta by the interval it actually spans: one FRI SEND PERIOD per packet
+        // (_joint_position_prev only moves on a received packet). ⚠ Never 1/_control_freq, the loop
+        // period: at a 5 ms send period that inflated every velocity, and every damping torque, 2.5x.
+        // A lost packet makes the delta span n periods; n comes from the robot's own timestamps,
+        // rounded so jitter never moves the divisor. An n past the silence window is a clock jump.
+        const double period = (_fri_sample_time > 0.) ? _fri_sample_time : elapsed_time.toSec();
+        const double stamp = _robot_state.getTimestampSec() + 1e-9 * _robot_state.getTimestampNanoSec();
+        double n = 1.;
+        if (!_velocity_seed && _fri_sample_time > 0.) {
+            const double r = std::round((stamp - _robot_stamp_prev) / period);
+            if (r > 1. && (r - 1.) * period < kStateSilenceS) {
+                n = r;
+                _lost_packets += static_cast<unsigned long>(r) - 1;
+                ROS_WARN_THROTTLE(1.0, "[FRI] %.0f packet(s) lost before this one (%lu since start)", r - 1., _lost_packets);
+            }
+        }
+        _robot_stamp_prev = stamp;
+
+        // Update ROS structures. On a seeding packet (the first, or the first after a silence) the only
+        // earlier sample is the init zeros or a stale pose, so the arm is reported at rest.
         _joint_position_prev = _joint_position;
-
-        // Divide the position delta by the interval it actually spans. _joint_position_prev is
-        // only refreshed on iterations where _read_fri() succeeded (the early return above), so
-        // that interval is one FRI SEND PERIOD — not the loop period. Using 1/_control_freq here
-        // silently scaled every reported velocity by (send_period * _control_freq): correct at
-        // setSendPeriodMilliSec(2), but 2.5x too large at (5). The joint passive controller is
-        // velocity-driven, so that inflated every damping torque by the same factor.
-        const double dt = (_fri_sample_time > 0.) ? _fri_sample_time : elapsed_time.toSec();
-
         for (int i = 0; i < _num_joints; i++) {
             _joint_position[i] = _robot_state.getMeasuredJointPosition()[i];
-            _joint_velocity[i] = filters::exponentialSmoothing((_joint_position[i] - _joint_position_prev[i]) / dt, _joint_velocity[i], _velocity_alpha.load());
+            const double raw = (_joint_position[i] - _joint_position_prev[i]) / (n * period);
+            const double v = filters::exponentialSmoothing(raw, _joint_velocity[i], _velocity_alpha.load());
+            _joint_velocity[i] = _velocity_seed ? 0. : v;
             _joint_effort[i] = _robot_state.getMeasuredTorque()[i];
+        }
+        _velocity_seed = false;
+        _have_state = true;
+        _state_t = _steady_now();
+    }
+
+    // No valid state for kStateSilenceS: report q̇ = 0 rather than hold the last filtered value, which
+    // reads as motion nobody measured, and seed afresh at the next packet. q stays at the last sample.
+    void Iiwa::_check_state_silence()
+    {
+        if (_have_state && !_velocity_seed && _steady_now() - _state_t > kStateSilenceS) {
+            std::fill(_joint_velocity.begin(), _joint_velocity.end(), 0.);
+            _velocity_seed = true;
+            ROS_WARN("[FRI] no robot state for %.0f ms: joint velocity reported as 0 until the next packet",
+                     kStateSilenceS * 1e3);
         }
     }
 

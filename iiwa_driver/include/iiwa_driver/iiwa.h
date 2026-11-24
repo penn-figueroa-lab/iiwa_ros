@@ -97,6 +97,7 @@ namespace iiwa_ros {
         void _ctrl_loop();
         void _load_params();
         void _read(ros::Duration elapsed_time);
+        void _check_state_silence(); // q̇ := 0 and re-seed once no valid state arrived for a while
         void _write(ros::Duration elapsed_time);
         bool _init_fri();
         bool _connect_fri();
@@ -174,10 +175,17 @@ namespace iiwa_ros {
         double _control_freq;
         // Robot-reported FRI send period (s), from LBRState::getSampleTime(). This is the true
         // interval between two consecutive position samples and is what the joint-velocity
-        // finite difference must be divided by — NOT 1/_control_freq, which is only equal to it
+        // finite difference is divided by (× the packets a loss spans) — NOT 1/_control_freq, equal to it only
         // when the Sunrise app happens to use setSendPeriodMilliSec(2). 0 until the first packet.
         double _fri_sample_time;
         bool _initialized;
+        // Velocity needs a previous sample from the same session. Until the first packet nothing is
+        // published (_have_state); the first packet, and the first after a silence, seeds the
+        // difference and reports q̇ = 0 (_velocity_seed).
+        bool _have_state{false}, _velocity_seed{true};
+        double _state_t{-1.};          // steady-clock s of the last valid state
+        double _robot_stamp_prev{0.};  // robot timestamp of that state [s]
+        unsigned long _lost_packets{0}; // since driver start, counted from the robot timestamps
 
         // Torque-mode position dither (upstream e293093). The commanded position is otherwise the
         // measured one, and KUKA disables its friction compensation when the robot sits at the
